@@ -6,15 +6,17 @@ export function LoginForm({
   className,
   ...props
 }) {
+  //states to hangle form
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-
+//Effect when mounted and location changes
   useEffect(() => {
     // Check for error message in URL
+    //get data  token and user from backend 
     const params = new URLSearchParams(window.location.search)
     const errorMsg = params.get('error')
     if (errorMsg) {
@@ -50,7 +52,7 @@ export function LoginForm({
         setError('Authentication failed. Please try again.')
       }
     }
-  }, [navigate, location])
+  }, [location])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

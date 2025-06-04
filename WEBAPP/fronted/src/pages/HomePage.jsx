@@ -15,12 +15,10 @@ export default function HomePage() {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6 }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-      
-      {/* Hero Section */}
+      {/**/}    
       <div className="relative overflow-hidden py-20 sm:py-32">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50"></div>
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-blue-100 to-transparent opacity-40"></div>
@@ -50,6 +48,10 @@ export default function HomePage() {
               >
                 Get Started Now
               </Button>
+
+    {/*change navigatee to explore page later on*/}
+
+
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/register")} 
