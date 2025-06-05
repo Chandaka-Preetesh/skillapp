@@ -9,6 +9,8 @@ import {
 import HomePage from "./pages/HomePage";
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import UserHomePage from './pages/UserHomePage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 function App() {
@@ -20,10 +22,14 @@ function App() {
         <Route path="/" element={<HomePage />} />
          <Route path="/login" element={<LoginPage />} />
          <Route path="/register" element={<RegisterPage />} />
-        
-        
-
-
+             <Route 
+          path="/user-home" 
+          element={
+            <ProtectedRoute>
+              <UserHomePage />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
     </div>

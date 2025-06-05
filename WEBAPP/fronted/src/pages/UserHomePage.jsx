@@ -1,24 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import DashboardNavBar from '../components/dashboard/DashboardNavBar';
+import DashboardNavBar from '../components/dashboard/DashboardNavBar'; // Assuming this component exists and is styled
 
 // RecentActivities Component (similar to the one in Dashboard.jsx)
-symbolsArray=["📚","💬" ,"🔗",];
 const RecentActivities = () => {
   const activities = [
-    { text: "Completed 'Advanced CSS Techniques'", time: "1h ago"},
-    { text: "Replied in 'JavaScript Best Practices'", time: "3h ago"},
-    { text: "Shared a new resource on 'Web Accessibility'", time: "5h ago"},
-    { text: "Started 'Data Structures in Python' course", time: "1d ago"},
+    { text: "Completed 'Advanced CSS Techniques'", time: "1h ago", icon: "📚" },
+    { text: "Replied in 'JavaScript Best Practices'", time: "3h ago", icon: "💬" },
+    { text: "Shared a new resource on 'Web Accessibility'", time: "5h ago", icon: "🔗" },
+    { text: "Started 'Data Structures in Python' course", time: "1d ago", icon: "🚀" },
   ];
 
-  
-  //create a recent table user,type,activity,time get details via request 
-
-
-
-
-const RecentActivites =()=>{}
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-8">
       <h2 className="text-xl font-semibold mb-4">Recent Activities</h2>

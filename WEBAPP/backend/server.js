@@ -16,6 +16,8 @@ import { sql } from "./config/idb.js";
 import { idatabase } from "./config/idb.js";
 import { configurePassport } from "./controlers/googleauthController.js";
 
+import {verifyAuth} from "./controlers/verifyAuth.js";
+
 // Get the directory path of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -67,7 +69,26 @@ app.get("/",(req,res)=>{
 // Routes related to google autentication
 app.use("/api/t", testRouter);
 app.use("/api/googleauth",googleauthRoutes);
+
+//email related login and register
 app.use("/api/emailauth",emailauthRoutes);
+
+
+
+// Verify token endpoint
+app.get('/api/auth/verify',verifyAuth);
+
+//Routes handles with appropriate retured responses
+app.get('/auth/user', (req, res) => {
+  res.json(req.user || null);
+});
+
+app.get('/auth/logout', (req, res) => {
+  req.logout(() => {
+    res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+  });
+});
+
  
 idatabase();
 
