@@ -6,7 +6,7 @@ export const linkGoogleAccount = async ({ email, full_name, google_id }) => {
   try {
     // Check if user already exists
     const isPresent = await sql`
-      SELECT userid FROM users2 WHERE googleid = ${google_id};
+      SELECT userid FROM users2 WHERE email= ${email};
     `;
     let userid;
     if (isPresent.length > 0) {
