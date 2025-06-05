@@ -9,10 +9,12 @@ import session from 'express-session';
 import passport from 'passport';
 
 import testRouter from "./routes/testRoute.js";
-import authRouter from "./routes/authRoutes.js";
+import googleauthRoutes from "./routes/googleauthRoutes.js"
+import emailauthRoutes from "./routes/emailauthRoutes.js"
+
 import { sql } from "./config/idb.js";
 import { idatabase } from "./config/idb.js";
-import { configurePassport } from "./controlers/authController.js";
+import { configurePassport } from "./controlers/googleauthController.js";
 
 // Get the directory path of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -62,10 +64,11 @@ app.get("/",(req,res)=>{
     res.send("hello from backend");
 });
 
-// Routes
+// Routes related to google autentication
 app.use("/api/t", testRouter);
-app.use("/auth", authRouter);
-
+app.use("/api/googleauth",googleauthRoutes);
+app.use("/api/emailauth",emailauthRoutes);
+ 
 idatabase();
 
 app.listen(PORT,()=>{

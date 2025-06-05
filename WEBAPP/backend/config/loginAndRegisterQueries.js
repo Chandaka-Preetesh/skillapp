@@ -25,6 +25,7 @@ export const linkGoogleAccount = async ({ email, full_name, google_id }) => {
         RETURNING userid;
       `;
       userid = inserted[0].userid;
+      await sql`INSERT INTO skillcoin2 (userid,balance) values (${userid},${500})`;
     }
     return { userid, email, full_name, google_id };
   } catch (error) {
@@ -32,3 +33,77 @@ export const linkGoogleAccount = async ({ email, full_name, google_id }) => {
     throw error;
   }
 };
+
+export const checkEmailExists = async (email) => {
+  try {
+    const isPresent = await sql`
+      SELECT userid, googleid FROM users2 WHERE email = ${email}
+    `;
+    return isPresent.length>0 ? isPresent:null;
+  } catch (error) {
+    console.log("Error while checking email");
+    throw error;
+  }
+};
+
+
+export const createUser = async ({ email, full_name, hashed_password }) => {
+  try {
+    const user = await sql`
+      INSERT INTO users2 (email, full_name, hashed_password)
+      VALUES (${email}, ${full_name}, ${hashed_password})
+      RETURNING userid
+    `;
+    const userid = user[0].userid;
+
+    await sql`
+      INSERT INTO skillcoin2 (userid, balance)
+      VALUES (${userid}, ${500})
+    `;
+
+    return { userid, email, full_name };
+  } catch (error) {
+    console.log("Error while adding new user");
+    throw error;
+  }
+};
+
+export const findUser = async (email) => {
+  try {
+    const user = await sql`
+      SELECT userid, full_name, hashed_password, googleid
+      FROM users2 WHERE email = ${email}
+    `;
+       return user.length > 0 ? user[0] : null;
+  } catch (error) {
+    console.log("Error while finding user");
+    throw error;
+  }
+};
+
+
+export const updateLastLogin = async (userid) => {
+  try {
+    await sql`
+      UPDATE users2
+      SET lastLogin = NOW()
+      WHERE userid = ${userid}
+    `;
+  } catch (error) {
+    console.log("Error while updating last login");
+    throw error;
+  }
+};
+
+export const getUserById =async (userid) =>{
+    try {
+    const user = await sql`
+      SELECT userid
+      FROM users2 WHERE userid = ${userid}
+    `;
+       return user.length > 0 ? user[0] : null;
+  } catch (error) {
+    console.log("Error while finding user");
+    throw error;
+  }
+}

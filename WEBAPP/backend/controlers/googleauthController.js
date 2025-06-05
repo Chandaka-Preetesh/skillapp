@@ -19,7 +19,7 @@ export const configurePassport = () => {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/auth/google/callback",
+        callbackURL: "/api/googleauth/google/callback",
         scope: ["profile", "email"]
       },
       //After getting details tries to link account and return a callback to passport serialsize

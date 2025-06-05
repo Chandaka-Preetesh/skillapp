@@ -60,7 +60,7 @@ export function LoginForm({
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch('http://localhost:3000/api/emailauth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ export function LoginForm({
     
     console.log('Initiating Google OAuth login');
     // Redirect to Google OAuth endpoint
-    window.location.href = 'http://localhost:3000/auth/google'
+    window.location.href = 'http://localhost:3000/api/googleauth/google'
   }
 
   return (

@@ -18,7 +18,7 @@ export function RegisterForm({ className, ...props }) {
     setLoading(true)
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
+      const response = await fetch("http://localhost:3000/api/emailauth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,7 +54,7 @@ export function RegisterForm({ className, ...props }) {
   }
 
   const handleGoogleSignUp = () => {
-    window.location.href = 'http://localhost:3000/auth/google';
+    window.location.href = 'http://localhost:3000/api/googleauth/google';
   }
 
   return (
