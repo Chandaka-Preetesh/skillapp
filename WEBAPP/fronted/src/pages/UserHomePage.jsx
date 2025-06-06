@@ -1,27 +1,44 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import DashboardNavBar from '../components/dashboard/DashboardNavBar'; // Assuming this component exists and is styled
+import DashboardNavBar from '../components/dashboard/DashboardNavBar';
+import axios from '../utils/axios.js';
+import  { useState, useEffect } from 'react';
+
+
+import { useNavigate } from 'react-router-dom';
 
 // RecentActivities Component (similar to the one in Dashboard.jsx)
-const RecentActivities = () => {
-  const activities = [
-    { text: "Completed 'Advanced CSS Techniques'", time: "1h ago", icon: "📚" },
-    { text: "Replied in 'JavaScript Best Practices'", time: "3h ago", icon: "💬" },
-    { text: "Shared a new resource on 'Web Accessibility'", time: "5h ago", icon: "🔗" },
-    { text: "Started 'Data Structures in Python' course", time: "1d ago", icon: "🚀" },
-  ];
+const RecentActivities = ()  => {
+  console.log("reached user page");
+  const navigate = useNavigate();
+  const [activities, setActivities] = useState([]);
+  useEffect(() => {
+    const fetchAndUpdateActivities = async () => {
+      try {
+        console.log("calling route to fetch activity");
+        const response = await axios.get("/api/me/getRecentActivity");
+        setActivities(response.data.recentActivity);
+        console.log("got activites");
+      } catch (error) {
+        console.error('Error while getting user details or updating activities:', error);
+        localStorage.clear();
+        navigate('/login', { replace: true });
+      }
+    };
+
+    fetchAndUpdateActivities();
+  }, [navigate]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-8">
       <h2 className="text-xl font-semibold mb-4">Recent Activities</h2>
       <div className="flex space-x-4 overflow-x-auto pb-2">
-        {activities.map((activity, index) => (
+        {activities.map((activities, index) => (
           <div key={index} className="flex-shrink-0 w-64 bg-gray-50 rounded-lg p-3 hover:shadow-lg transition-shadow">
             <div className="flex items-center">
-              <span className="text-2xl mr-3">{activity.icon}</span>
               <div>
-                <p className="text-sm text-gray-700 font-medium">{activity.text}</p>
-                <span className="text-xs text-gray-500">{activity.time}</span>
+                <p className="text-sm text-gray-700 font-medium">{activities.activity}</p>
+                <span className="text-xs text-gray-500">{activities.time}</span>
               </div>
             </div>
           </div>

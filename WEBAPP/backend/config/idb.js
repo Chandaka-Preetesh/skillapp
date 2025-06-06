@@ -34,7 +34,23 @@ export async function idatabase () {
     PRIMARY KEY (courseid, userid)
   )
 `
-
+    await sql`
+  CREATE TABLE IF NOT EXISTS recent_activity2 (
+     id SERIAL PRIMARY KEY,
+    userid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
+    type VARCHAR(60),
+    activity VARCHAR(200),
+    time TIMESTAMP DEFAULT NOW()
+  );
+`
+ await sql`
+  CREATE TABLE IF NOT EXISTS skillcoin2 (
+    userid INTEGER PRIMARY KEY REFERENCES users2(userid) ON DELETE CASCADE,
+     balance NUMERIC(10,2),
+    lastupdate TIMESTAMP DEFAULT NOW()
+  );
+`;
+;
 
 
 console.log("database intialised");

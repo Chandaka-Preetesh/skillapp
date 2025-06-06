@@ -11,6 +11,7 @@ import passport from 'passport';
 import testRouter from "./routes/testRoute.js";
 import googleauthRoutes from "./routes/googleauthRoutes.js"
 import emailauthRoutes from "./routes/emailauthRoutes.js"
+import userRoutes from "./routes/userRoutes.js"
 
 import { sql } from "./config/idb.js";
 import { idatabase } from "./config/idb.js";
@@ -75,13 +76,23 @@ app.use("/api/emailauth",emailauthRoutes);
 
 
 
+app.use("/api/me",userRoutes);
+
+
+
 // Verify token endpoint
 app.get('/api/auth/verify',verifyAuth);
+
+
+
+
 
 //Routes handles with appropriate retured responses
 app.get('/auth/user', (req, res) => {
   res.json(req.user || null);
 });
+
+
 
 app.get('/auth/logout', (req, res) => {
   req.logout(() => {

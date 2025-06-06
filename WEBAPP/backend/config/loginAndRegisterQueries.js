@@ -26,6 +26,12 @@ export const linkGoogleAccount = async ({ email, full_name, google_id }) => {
       `;
       userid = inserted[0].userid;
       await sql`INSERT INTO skillcoin2 (userid,balance) values (${userid},${500})`;
+      let type="create";
+      let activity="Created an account with google "
+      console.log("after skill coin creation");
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) values (${userid},${type},${activity})  `
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) values (${userid},${"credit_coin"},${"creditied 500 coins for creating account"}) `
+      console.log("after recent activites updatedd");
     }
     return { userid, email, full_name, google_id };
   } catch (error) {
@@ -60,7 +66,14 @@ export const createUser = async ({ email, full_name, hashed_password }) => {
       INSERT INTO skillcoin2 (userid, balance)
       VALUES (${userid}, ${500})
     `;
-
+    console.log("after skill coin insertion");
+      let type="create";
+     let activity="Created an account with email";
+     let type2="credit_coin";
+     let activity2="Credited 500 skill coin";
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type},${activity})  `
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type2},${activity2}) `
+      console.log("after recent activites updatedd");
     return { userid, email, full_name };
   } catch (error) {
     console.log("Error while adding new user");
