@@ -14,19 +14,20 @@ export const sql=neon (
 export async function idatabase () {
     try {
         await sql `
-        CREATE TABLE  IF NOT EXISTS cources2 (
-        courceid SERIAL PRIMARY KEY,
+        CREATE TABLE  IF NOT EXISTS courses2 (
+        courseid SERIAL PRIMARY KEY,
         title varchar(60),
         description TEXT,
         price NUMERIC (10,2),
         duration varchar(40),
+        type varchar (40),
         createdAt TIMESTAMP DEFAULT NOW(),
         userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE
     )   
     `
     await sql`
-  CREATE TABLE IF NOT EXISTS cource_post_details2 (
-    courseid INTEGER REFERENCES cources(courceid) ON DELETE CASCADE,
+  CREATE TABLE IF NOT EXISTS course_post_details2 (
+    courseid INTEGER REFERENCES courses2(courseid) ON DELETE CASCADE,
     userid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
     isLike BOOLEAN DEFAULT false,
     isRated INTEGER DEFAULT 0,
@@ -50,7 +51,20 @@ export async function idatabase () {
     lastupdate TIMESTAMP DEFAULT NOW()
   );
 `;
-;
+
+await sql`CREATE TABLE IF NOT EXISTS topics2 (
+topicid SERIAL,
+topic_name varchar(60)
+)`
+
+await sql `CREATE TABLE IF NOT EXISTS course_purchases2 (
+id serial,
+userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
+courseid INTEGER  REFERENCES courses2(courseid) ON DELETE CASCADE,
+PRIMARY KEY (userid,courseid),
+purchase_date TIMESTAMP DEFAULT NOW()
+) `
+
 
 
 console.log("database intialised");

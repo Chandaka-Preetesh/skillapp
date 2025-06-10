@@ -12,6 +12,7 @@ import testRouter from "./routes/testRoute.js";
 import googleauthRoutes from "./routes/googleauthRoutes.js"
 import emailauthRoutes from "./routes/emailauthRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
+import marketplaceRoutes from "./routes/marketplaceRoutes.js"
 
 import { sql } from "./config/idb.js";
 import { idatabase } from "./config/idb.js";
@@ -75,9 +76,12 @@ app.use("/api/googleauth",googleauthRoutes);
 app.use("/api/emailauth",emailauthRoutes);
 
 
-
+//to use for a particular use related data 
 app.use("/api/me",userRoutes);
 
+//marketplace routes
+
+app.use("/api/marketplace",marketplaceRoutes);
 
 
 // Verify token endpoint

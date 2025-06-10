@@ -16,10 +16,9 @@ export const authenticateToken = (req, res, next) => {
 
     // Ensure we have the required user data
     req.user = {
-      id: decoded.id ,
+      userid: decoded.userid ,
       email: decoded.email,
       googleId: decoded.googleId,
-      isGoogleAuth: decoded.isGoogleAuth
     };
     next();
   } catch (error) {

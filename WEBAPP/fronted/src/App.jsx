@@ -11,7 +11,7 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import UserHomePage from './pages/UserHomePage';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import Marketplace from './pages/Marketplace';
 
 function App() {
 
@@ -30,6 +30,16 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        {
+          <Route 
+          path="/marketplace" 
+          element={
+            <ProtectedRoute>
+              <Marketplace />
+            </ProtectedRoute>
+          } 
+        />
+        }
       </Routes>
     </Router>
     </div>
