@@ -67,7 +67,7 @@ console.log("market comporendering");
 
   
   const filteredCourses = selectedTopic
-    ? courses.filter(course => course.topic_name === selectedTopic)
+    ? courses.filter(course => course.type=== selectedTopic)
     : courses;
 
   // Handle form input changes
@@ -84,6 +84,8 @@ console.log("market comporendering");
     e.preventDefault();
     try {
       const response = await axios.post('/api/marketplace/courses', formData);
+      console.log("while submition")
+      console.log(formData);
       setCourses(prev => [response.data, ...prev]);
       setMyCourses(prev => [response.data, ...prev]);
       setShowPostForm(false);
@@ -110,7 +112,7 @@ console.log("market comporendering");
       setPurchasedCourses(prev => [...prev, purchasedCourse]);
       
       // Update skill coins balance
-      setSkillCoins(response.data.balance);
+      setSkillCoins(response.data.newBalance);
       
       alert('Course purchased successfully!');
     } catch (err) {
@@ -138,7 +140,7 @@ console.log("market comporendering");
 
   // Check if user has purchased a course
   const isPurchased = (course) => {
-    return purchasedCourses.some(purchased => purchased.userid === course.userid);
+    return purchasedCourses.some(purchased => purchased.courseid=== course.courseid);
   };
 
   return (
@@ -298,7 +300,7 @@ console.log("market comporendering");
                   {purchasedCourses.map(course => (
                     <div key={course.id} className="border-b pb-3 last:border-0">
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
-                      <p className="text-sm text-gray-500 mb-1">{course.topic_name || 'General'}</p>
+                      <p className="text-sm text-gray-500 mb-1">{course.type || 'General'}</p>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500">{course.duration}</span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -328,7 +330,7 @@ console.log("market comporendering");
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <span className="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full mb-2">
-                            {course.topic_name || 'General'}
+                            {course.type || 'General'}
                           </span>
                           <h3 className="text-xl font-bold text-gray-800">{course.title}</h3>
                         </div>
@@ -361,7 +363,7 @@ console.log("market comporendering");
                           </span>
                         ) : (
                           <button
-                            onClick={() => handlePurchase(course.id)}
+                            onClick={() => handlePurchase(course.courseid)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                           >
                             Buy Course
@@ -391,7 +393,7 @@ console.log("market comporendering");
                   {myCourses.map(course => (
                     <div key={course.id} className="border-b pb-3 last:border-0">
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
-                      <p className="text-sm text-gray-500 mb-1">{course.topic_name || 'General'}</p>
+                      <p className="text-sm text-gray-500 mb-1">{course.type || 'General'}</p>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500">{course.duration}</span>
                         <span className="text-xs text-yellow-600 font-medium">🪙 {course.price}</span>

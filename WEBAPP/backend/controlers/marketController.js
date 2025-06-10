@@ -35,12 +35,12 @@ export const getCourses=async (req, res) => {
 
 export const createCourse=async (req, res) => {
   try {
-    const { title, description, topicName } = req.body;
+    const { title, description, topicName ,price} = req.body;
     const userid = req.user.userid;
 
     const [course] = await sql`
-      INSERT INTO courses2 (title, description,userid, type)
-      VALUES (${title}, ${description}, ${userid}, ${topicName})
+      INSERT INTO courses2 (title, description,userid, type,price)
+      VALUES (${title}, ${description}, ${userid}, ${topicName},${price})
       RETURNING 
         courses2.*,
         (SELECT full_name FROM users2 WHERE userid = ${userid}) as author
@@ -88,13 +88,17 @@ export const purchaseCourses=async (req, res) => {
     const [buyer] = await sql`
       SELECT * FROM skillcoin2 WHERE userid = ${buyerid}
     `;
+    if(!buyer ) {
+      res.status(400).json({ error: 'Buyer id invalid ' } );
+    }
 //if coins not enough 
-    if (buyer.balance < course.price) {
+    let buyer_balance=Number(buyer.balance);
+    let course_price=Number(course.price)
+    if ( buyer_balance<course_price  ) {
       return res.status(400).json({ error: 'Insufficient SkillCoins balance' });
     }
 
     // Begin transaction
-    await sql.begin(async (sql) => {
       // Deduct coins from buyer
       await sql`
         UPDATE skillcoin2
@@ -102,32 +106,11 @@ export const purchaseCourses=async (req, res) => {
         WHERE userid = ${buyerid}
       `;
 
-      // Add coins to seller
-    /*  await sql`
-        UPDATE users 
-        SET skill_coins = skill_coins + ${course.price}
-        WHERE id = ${course.seller_id}
-      `;
-      */
-
-      // Record transaction
-      /*
-      await sql`
-        INSERT INTO skill_coin_transactions (
-          sender_id, receiver_id, amount, transaction_type, course_id, description
-        ) VALUES (
-          ${buyerId}, ${course.seller_id}, ${course.price}, 'course_purchase', ${courseId}, 
-          ${'Purchase of course: ' + course.title}
-        )
-      `;
-      */
-
       // Create purchase record
       await sql`
         INSERT INTO course_purchases2 (courseid, userid)
         VALUES (${courseid}, ${buyerid})
       `;
-    });
 
     // Get updated balance
     const [updatedUser] = await sql`

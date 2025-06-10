@@ -33,7 +33,7 @@ router.get('/skill-coins', authenticateToken,getSkillCoins);
 router.get('/my-courses', authenticateToken,getUserPosted);
 
 // Purchase a course with SkillCoins
-router.post('/courses/:courseId/purchase', authenticateToken, purchaseCourses);
+router.post('/courses/:courseid/purchase', authenticateToken, purchaseCourses);
 
 // Get transaction history
 router.get('/transactions', authenticateToken, async (req, res) => {
