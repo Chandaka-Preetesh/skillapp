@@ -92,7 +92,7 @@ const UserHomePage = () => {
             title="Resource Marketplace"
             description="Discover tools, templates, and other valuable resources. Contribute your own to help the community."
             icon="🛠️"
-            linkTo="/resources" // New route
+            linkTo="/doubt" // New route
             color="green"
             bgColor="bg-green-500"
           />
