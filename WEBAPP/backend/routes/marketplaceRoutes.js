@@ -9,7 +9,9 @@ import { getPurchasedCourses } from '../controlers/marketController.js';
 import  {getSkillCoins } from "../controlers/marketController.js";
 import { getUserPosted } from '../controlers/marketController.js';
 import { purchaseCourses } from '../controlers/marketController.js';
- 
+
+import {updateCourseRating} from "../controlers/marketController.js";
+
 const router = express.Router();
 
 router.get('/topics', getTopics);
@@ -61,6 +63,11 @@ router.get('/transactions', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
+
+
+//posted related
+
+router.post('/updatecourserating',authenticateToken,updateCourseRating);
 
 
 export default router;

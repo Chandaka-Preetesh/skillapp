@@ -26,16 +26,6 @@ export async function idatabase () {
     )   
     `
     await sql`
-  CREATE TABLE IF NOT EXISTS course_post_details2 (
-    courseid INTEGER REFERENCES courses2(courseid) ON DELETE CASCADE,
-    userid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
-    isLike BOOLEAN DEFAULT false,
-    isRated INTEGER DEFAULT 0,
-    lastUpdated TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (courseid, userid)
-  )
-`
-    await sql`
   CREATE TABLE IF NOT EXISTS recent_activity2 (
      id SERIAL PRIMARY KEY,
     userid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
@@ -63,6 +53,14 @@ userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
 courseid INTEGER  REFERENCES courses2(courseid) ON DELETE CASCADE,
 PRIMARY KEY (userid,courseid),
 purchase_date TIMESTAMP DEFAULT NOW()
+) `
+
+await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
+      userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
+    courseid INTEGER  REFERENCES courses2(courseid) ON DELETE CASCADE,
+    PRIMARY KEY (userid,courseid),
+    is_liked BOOLEAN DEFAULT FALSE,
+    rating  INTEGER DEFAULT 0
 ) `
 
 

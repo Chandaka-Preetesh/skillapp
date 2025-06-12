@@ -35,12 +35,12 @@ export const getCourses=async (req, res) => {
 
 export const createCourse=async (req, res) => {
   try {
-    const { title, description, topicName ,price} = req.body;
+    const { title, description, topicName ,price,duration} = req.body;
     const userid = req.user.userid;
 
     const [course] = await sql`
-      INSERT INTO courses2 (title, description,userid, type,price)
-      VALUES (${title}, ${description}, ${userid}, ${topicName},${price})
+      INSERT INTO courses2 (title, description,userid, type,price,duration)
+      VALUES (${title}, ${description}, ${userid}, ${topicName},${price},${duration})
       RETURNING 
         courses2.*,
         (SELECT full_name FROM users2 WHERE userid = ${userid}) as author
@@ -128,23 +128,26 @@ export const purchaseCourses=async (req, res) => {
 };
 
 
-export const getPurchasedCourses=async (req, res) => {
+export const getPurchasedCourses = async (req, res) => {
   try {
     const userid = req.user.userid;
     
-    const purchases = await sql`
+    const coursesOwned = await sql`
       SELECT 
         c.*,
         u.full_name as author,
-        p.purchase_date
+        p.purchase_date,
+        cpd.rating,
+        cpd.is_liked
       FROM course_purchases2 p
       JOIN courses2 c ON p.courseid = c.courseid
       JOIN users2 u ON c.userid = u.userid
+      LEFT JOIN course_post_details2 cpd ON cpd.courseid = p.courseid AND cpd.userid = p.userid
       WHERE p.userid = ${userid}
       ORDER BY p.purchase_date DESC
     `;
     
-    res.json(purchases);
+    res.json(coursesOwned);
   } catch (error) {
     console.error('Error fetching purchased courses:', error);
     res.status(500).json({ error: 'Failed to fetch purchased courses' });
@@ -190,3 +193,25 @@ export const getUserPosted=async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user courses' });
   }
 };
+
+export const updateCourseRating =async (req,res)=> {
+    try {
+         const { courseid, newRating } = req.body;
+        const userid = req.user.userid;
+
+        const course_post_details2 = await sql`
+        INSERT INTO course_post_details2 (courseid, userid, rating)
+         VALUES (${courseid}, ${userid}, ${newRating})
+           ON CONFLICT (courseid, userid)
+           DO UPDATE SET rating = ${newRating}
+         RETURNING *;
+`;
+
+res.json(course_post_details2);
+
+    }
+    catch (error) {
+      console.log("error occurecd while updating ratings ");
+      res.status(500).json({error:"failed to update rating "});
+    }
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import DashboardNavBar from '../components/dashboard/DashboardNavBar';
 import axios from '../utils/axios.js';
 import  { useState, useEffect } from 'react';
-
+import StarRating  from '../components/StarRating';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -302,6 +302,10 @@ console.log("market comporendering");
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
                       <p className="text-sm text-gray-500 mb-1">{course.type || 'General'}</p>
                       <div className="flex justify-between items-center">
+                        <StarRating
+                        courseid={course.courseid}
+                        initialRating={course.rating}
+                        />
                         <span className="text-xs text-gray-500">{course.duration}</span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                           Purchased
