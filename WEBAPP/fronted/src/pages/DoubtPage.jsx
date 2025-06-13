@@ -4,6 +4,8 @@ import axios from '../utils/axios.js';
 import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import StarRating from '../components/StarRating';
+
 const Doubts = () => {
     const navigate = useNavigate();
   const [doubts, setDoubts] = useState([]);
@@ -142,9 +144,7 @@ console.log("doubts component rendering");
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
@@ -248,9 +248,9 @@ console.log("doubts component rendering");
             >
               All Topics
             </button>
-            {topics.map(topic => (
+            {topics.map( (topic,index) => (
               <button
-                key={topic.topicid}
+                key={index}
                 onClick={() => setSelectedTopic(topic.topic_name)}
                 className={`px-3 py-1 rounded-full text-sm ${selectedTopic === topic.topic_name ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
               >
@@ -295,8 +295,8 @@ console.log("doubts component rendering");
               </div>
             ) : filteredDoubts.length > 0 ? (
               <div className="space-y-6">
-                {filteredDoubts.map(doubt => (
-                  <div key={doubt.doubtid} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg">
+                {filteredDoubts.map( (doubt,index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg">
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -305,6 +305,12 @@ console.log("doubts component rendering");
                           </span>
                           <h3 className="text-xl font-bold text-gray-800">{doubt.title}</h3>
                         </div>
+                        <StarRating 
+                         doubtid={doubt.doubtid}
+                        initialRating={doubt.rating} 
+                        initialIsLiked={doubt.is_liked}
+                        />
+                        {console.log(doubt.userid+"   "+doubt.rating+"  "+doubt.is_liked)}
                         <div className="text-right">
                           <p className="text-sm text-gray-500">{formatDate(doubt.createdat)}</p>
                         </div>
@@ -367,8 +373,8 @@ console.log("doubts component rendering");
                           {/* Existing Replies */}
                           <div className="space-y-4">
                             {replies[doubt.doubtid]?.length > 0 ? (
-                              replies[doubt.doubtid].map(reply => (
-                                <div key={reply.doubt_replies_id} className="bg-gray-50 rounded-lg p-4">
+                              replies[doubt.doubtid].map( (reply,index) => (
+                                <div key={index} className="bg-gray-50 rounded-lg p-4">
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center">
                                       <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden mr-2">

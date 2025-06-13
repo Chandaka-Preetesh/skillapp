@@ -196,17 +196,38 @@ export const getUserPosted=async (req, res) => {
 
 export const updateCourseRating =async (req,res)=> {
     try {
-         const { courseid, newRating } = req.body;
+         const { courseid, rating } = req.body;
         const userid = req.user.userid;
 
         const course_post_details2 = await sql`
         INSERT INTO course_post_details2 (courseid, userid, rating)
-         VALUES (${courseid}, ${userid}, ${newRating})
+         VALUES (${courseid}, ${userid}, ${rating})
            ON CONFLICT (courseid, userid)
-           DO UPDATE SET rating = ${newRating}
+           DO UPDATE SET rating = ${rating}
          RETURNING *;
 `;
 
+res.json(course_post_details2);
+
+    }
+    catch (error) {
+      console.log("error occurecd while updating ratings ");
+      res.status(500).json({error:"failed to update rating "});
+    }
+}
+
+export const toggleCourseLike =async (req,res)=>{
+          try {
+         const { courseid,isLiked} = req.body;
+        const userid = req.user.userid;
+
+        const course_post_details2 = await sql`
+        INSERT INTO course_post_details2 (courseid, userid)
+         VALUES (${courseid}, ${userid})
+           ON CONFLICT (courseid, userid)
+           DO UPDATE SET is_liked = ${isLiked}
+         RETURNING *;
+`;
 res.json(course_post_details2);
 
     }

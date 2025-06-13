@@ -11,6 +11,7 @@ import { getUserPosted } from '../controlers/marketController.js';
 import { purchaseCourses } from '../controlers/marketController.js';
 
 import {updateCourseRating} from "../controlers/marketController.js";
+import { toggleCourseLike } from '../controlers/marketController.js';
 
 const router = express.Router();
 
@@ -67,7 +68,8 @@ router.get('/transactions', authenticateToken, async (req, res) => {
 
 //posted related
 
-router.post('/updatecourserating',authenticateToken,updateCourseRating);
+router.post('/update-course-rating',authenticateToken,updateCourseRating);
+router.post('/toggle-course-like',authenticateToken,toggleCourseLike);
 
 
 export default router;

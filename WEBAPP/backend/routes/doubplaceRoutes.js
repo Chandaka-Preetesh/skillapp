@@ -12,13 +12,14 @@ import { getReplies } from '../controlers/doubtController.js';
 
 import { addReply } from '../controlers/doubtController.js';
 
-
+import { toggleDoubtLike } from '../controlers/doubtController.js';
+import { updateDoubtRating } from '../controlers/doubtController.js';
 
 const router = express.Router();
 
 router.get('/topics', getTopics);
 
-router.get("/doubts",getDoubts);
+router.get("/doubts",authenticateToken,getDoubts);
 
 
 router.post("/doubts",authenticateToken,createDoubt);
@@ -34,6 +35,11 @@ router.get('/doubts/:doubtid/replies', getReplies);
 // POST /api/doubts/:doubtid/replies  
 router.post('/doubts/:doubtid/replies', authenticateToken,addReply);
 
+
+//posted related
+
+router.post('/update-doubt-rating',authenticateToken,updateDoubtRating);
+router.post('/toggle-doubt-like',authenticateToken,toggleDoubtLike);
 
 
 export default router;

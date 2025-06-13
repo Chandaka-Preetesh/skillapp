@@ -203,8 +203,8 @@ console.log("market comporendering");
                     required
                   >
                     <option value="">Select a topic</option>
-                    {topics.map(topic => (
-                      <option key={topic.topicid} value={topic.topic_name}>
+                    {topics.map( (topic ,index)=> (
+                      <option key={index} value={topic.topic_name}>
                         {topic.topic_name}
                       </option>
                     ))}
@@ -277,9 +277,9 @@ console.log("market comporendering");
             >
               All Topics
             </button>
-            {topics.map(topic => (
+            {topics.map( (topic,index ) => (
               <button
-                key={topic.topicid}
+                key={index}
                 onClick={() => setSelectedTopic(topic.topic_name)}
                 className={`px-3 py-1 rounded-full text-sm ${selectedTopic === topic.topic_name ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
               >
@@ -305,7 +305,9 @@ console.log("market comporendering");
                         <StarRating
                         courseid={course.courseid}
                         initialRating={course.rating}
+                        initialIsLiked={course.is_liked}
                         />
+                        {console.log(course.userid+" is userid")}
                         <span className="text-xs text-gray-500">{course.duration}</span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                           Purchased
@@ -328,8 +330,8 @@ console.log("market comporendering");
               </div>
             ) : filteredCourses.length > 0 ? (
               <div className="space-y-6">
-                {filteredCourses.map(course => (
-                  <div key={course.id} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg">
+                {filteredCourses.map((course,index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg">
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -394,8 +396,8 @@ console.log("market comporendering");
               <h2 className="text-xl font-semibold mb-4 text-gray-800">My Posted Courses</h2>
               {myCourses.length > 0 ? (
                 <div className="space-y-4">
-                  {myCourses.map(course => (
-                    <div key={course.id} className="border-b pb-3 last:border-0">
+                  {myCourses.map( (course,index ) => (
+                    <div key={index} className="border-b pb-3 last:border-0">
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
                       <p className="text-sm text-gray-500 mb-1">{course.type || 'General'}</p>
                       <div className="flex justify-between items-center">

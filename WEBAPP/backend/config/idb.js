@@ -55,6 +55,16 @@ PRIMARY KEY (userid,courseid),
 purchase_date TIMESTAMP DEFAULT NOW()
 ) `
 
+
+      await sql`CREATE TABLE IF NOT EXISTS doubt_post_details2 (
+      id SERIAL ,
+      userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
+    doubtid INTEGER  REFERENCES  doubts2(doubtid) ON DELETE CASCADE,
+    PRIMARY KEY (userid,doubtid),
+    is_liked BOOLEAN DEFAULT FALSE,
+    rating  INTEGER DEFAULT 0
+      )`
+
 await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
       userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
     courseid INTEGER  REFERENCES courses2(courseid) ON DELETE CASCADE,
@@ -79,6 +89,7 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
   userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
   createdAt TIMESTAMP DEFAULT NOW()
 );`
+
 
 console.log("database intialised");
     }

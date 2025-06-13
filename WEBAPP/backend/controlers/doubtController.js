@@ -1,18 +1,29 @@
 import { sql} from "../config/idb.js";
 
-export const getDoubts=async (req, res) => {
+export const getDoubts = async (req, res) => {
   try {
     const { topic } = req.query;
+    const userid = req.user.userid; // The user ID from the request
     
     const doubts = topic 
       ? await sql`
-          SELECT *
-          FROM doubts2
-          WHERE topic=${topic}
+          SELECT d.*, 
+                 dpd.rating, 
+                 dpd.is_liked
+          FROM doubts2 d
+          LEFT JOIN doubt_post_details2 dpd 
+            ON d.doubtid = dpd.doubtid
+            AND dpd.userid = ${userid}  -- Join on the specific user's details
+          WHERE d.topic = ${topic}
         `
       : await sql`
-          SELECT *
-        FROM   doubts2;
+          SELECT d.*, 
+                 dpd.rating, 
+                 dpd.is_liked
+          FROM doubts2 d
+          LEFT JOIN doubt_post_details2 dpd 
+            ON d.doubtid = dpd.doubtid
+            AND dpd.userid = ${userid}  -- Join on the specific user's details
         `;
     
     res.json(doubts);
@@ -20,7 +31,7 @@ export const getDoubts=async (req, res) => {
     console.error('Error fetching doubts', error);
     res.status(500).json({ error: 'Failed to fetch doubts' });
   }
-}
+};
 
 export const createDoubt =async (req, res) => {
   try {
@@ -87,5 +98,49 @@ export const addReply =async(req,res)=>{
     catch (error) {
           console.log("error occured while posting reply")
         res.status(500).json({error:"failed to post reply of doubt"});
+    }
+}
+
+
+export const updateDoubtRating =async (req,res)=> {
+    try {
+         const { doubtid, rating } = req.body;
+        const userid = req.user.userid;
+
+        const doubt_post_details2 = await sql`
+        INSERT INTO doubt_post_details2 (doubtid, userid, rating)
+         VALUES (${doubtid}, ${userid}, ${rating})
+           ON CONFLICT (doubtid, userid)
+           DO UPDATE SET rating = ${rating}
+         RETURNING *;
+`;
+
+res.json(doubt_post_details2);
+
+    }
+    catch (error) {
+      console.log("error occurecd  doubt while updating ratings ");
+      res.status(500).json({error:"failed to doubt update rating "});
+    }
+}
+
+export const toggleDoubtLike =async (req,res)=>{
+          try {
+         const { doubtid,isLiked} = req.body;
+        const userid = req.user.userid;
+
+        const doubt_post_details2 = await sql`
+        INSERT INTO doubt_post_details2 (doubtid, userid)
+         VALUES (${doubtid}, ${userid})
+           ON CONFLICT (doubtid, userid)
+           DO UPDATE SET is_liked = ${isLiked}
+         RETURNING *;
+`;
+res.json(doubt_post_details2);
+
+    }
+    catch (error) {
+      console.log("error occurecd while updating doubt ratings ");
+      res.status(500).json({error:"failed to update doubt  rating "});
     }
 }
