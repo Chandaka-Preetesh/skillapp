@@ -63,7 +63,22 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
     rating  INTEGER DEFAULT 0
 ) `
 
+    await sql `CREATE TABLE IF NOT EXISTS doubts2 (
+  doubtid SERIAL PRIMARY KEY,
+  title varchar(60),
+  question TEXT,
+  topic varchar(60),
+  createdAt TIMESTAMP DEFAULT NOW(),
+  userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE
+)`;
 
+    await sql`CREATE TABLE IF NOT EXISTS doubt_replies2 (
+  doubt_replies_id SERIAL PRIMARY KEY,
+  doubtid INTEGER REFERENCES doubts2(doubtid) ON DELETE CASCADE,
+  reply TEXT ,
+  userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
+  createdAt TIMESTAMP DEFAULT NOW()
+);`
 
 console.log("database intialised");
     }

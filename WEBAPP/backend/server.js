@@ -13,8 +13,8 @@ import googleauthRoutes from "./routes/googleauthRoutes.js"
 import emailauthRoutes from "./routes/emailauthRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import marketplaceRoutes from "./routes/marketplaceRoutes.js"
+import doubtPlaceRoutes from "./routes/doubplaceRoutes.js"
 
-import { sql } from "./config/idb.js";
 import { idatabase } from "./config/idb.js";
 import { configurePassport } from "./controlers/googleauthController.js";
 
@@ -82,6 +82,10 @@ app.use("/api/me",userRoutes);
 //marketplace routes
 
 app.use("/api/marketplace",marketplaceRoutes);
+
+//doubtplace routes
+
+app.use("/api/doubtplace",doubtPlaceRoutes);
 
 
 // Verify token endpoint

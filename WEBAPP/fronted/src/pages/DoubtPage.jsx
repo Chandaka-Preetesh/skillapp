@@ -1,226 +1,411 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import DashboardNavBar from '../components/dashboard/DashboardNavBar';
+import axios from '../utils/axios.js';
+import  { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const DoubtsPage = () => {
+const Doubts = () => {
+    const navigate = useNavigate();
   const [doubts, setDoubts] = useState([]);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [topic, setTopic] = useState('');
-  const [filterTopic, setFilterTopic] = useState('All');
   const [topics, setTopics] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [myDoubts, setMyDoubts] = useState([]);
+  const [expandedDoubt, setExpandedDoubt] = useState(null);
   const [replies, setReplies] = useState({});
-const [replyInput, setReplyInput] = useState({});
-const [activeReplyBox, setActiveReplyBox] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    question: '',
+    topic: ''
+  });
 
+  // Fetch all data on component mounting
+console.log("doubts component rendering");
+ useEffect(() => {
+  const fetchAndUpdateDoubts = async () => {
+    try {
+      setIsLoading(true);
 
-  const sampleTopics = ['React', 'DBMS', 'JavaScript'];
+      const doubtsResponse = await axios.get('/api/doubtplace/doubts');
+      const topicsResponse = await axios.get('/api/doubtplace/topics');
+      const myDoubtsResponse = await axios.get('/api/doubtplace/my-doubts');
 
-  const sampleDoubts = [
-    {
-      id: 1,
-      title: 'How does useEffect work?',
-      description: 'Explain the dependency array in useEffect.',
-      topic: 'React',
-      author: 'You',
-    },
-    {
-      id: 2,
-      title: 'Normalization types?',
-      description: 'What are the types of normalization in DBMS?',
-      topic: 'DBMS',
-      author: 'Alice',
-    },
-  ];
-
-  useEffect(() => {
-    setTopics(['All', ...sampleTopics]);
-  }, []);
-
-  useEffect(() => {
-    fetchDoubts(filterTopic);
-  }, [filterTopic]);
-
-  const fetchDoubts = (topicFilter = '') => {
-    let filtered = [...sampleDoubts];
-    if (topicFilter && topicFilter !== 'All') {
-      filtered = filtered.filter((d) => d.topic === topicFilter);
+      setDoubts(doubtsResponse.data);
+      setTopics(topicsResponse.data);
+      setMyDoubts(myDoubtsResponse.data);
+      console.log("response sent from api calls")
+      console.log(doubtsResponse.data);
+      console.log(topicsResponse.data);
+      console.log(myDoubtsResponse.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error while getting doubts details or updating activities:', error);
+      localStorage.clear();
+      setIsLoading(false);
+      navigate('/login', { replace: true });
     }
-    setDoubts(filtered);
   };
 
-  const handlePostDoubt = (e) => {
+  fetchAndUpdateDoubts();
+}, [navigate]);
+
+  // Filter doubts by topic
+  const filteredDoubts = selectedTopic
+    ? doubts.filter(doubt => doubt.topic === selectedTopic)
+    : doubts;
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newDoubt = {
-      id: Date.now(),
-      title,
-      description,
-      topic,
-      author: 'You',
-    };
-    setDoubts((prev) => [newDoubt, ...prev]);
-    setTitle('');
-    setDescription('');
-    setTopic('');
-    setShowForm(false);
+    try {
+      const response = await axios.post('/api/doubtplace/doubts', formData);
+      console.log("while submission")
+      console.log(formData);
+      setDoubts(prev => [response.data, ...prev]);
+      setMyDoubts(prev => [response.data, ...prev]);
+      setShowPostForm(false);
+      setFormData({
+        title: '',
+        question: '',
+        topic: ''
+      });
+    } catch (err) {
+      console.error('Error creating doubt:', err);
+      setError('Failed to create doubt. Please try again.');
+    }
+  };
+
+  // Handle doubt expansion to show replies
+  const handleExpandDoubt = async (doubtid) => {
+    if (expandedDoubt === doubtid) {
+      setExpandedDoubt(null);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/doubtplace/doubts/${doubtid}/replies`);
+      console.log(response.data);
+      setReplies(prev => ({
+        ...prev,
+        [doubtid]: response.data
+      }));
+      setExpandedDoubt(doubtid);
+    } catch (err) {
+      console.error('Error fetching replies:', err);
+      setError('Failed to load replies. Please try again.');
+    }
+  };
+
+  // Handle reply submission
+  const handleReplySubmit = async (doubtid) => {
+    if (!replyText.trim()) return;
+
+    try {
+      const response = await axios.post(`/api/doubtplace/doubts/${doubtid}/replies`, {
+        reply: replyText
+      });
+      
+      // Update replies for this doubt
+      setReplies(prev => ({
+        ...prev,
+        [doubtid]: Array.isArray(response.data) ? response.data : []
+      }));
+      
+      setReplyText('');
+    } catch (err) {
+      console.error('Error posting reply:', err);
+      setError('Failed to post reply. Please try again.');
+    }
+  };
+
+  // Check if user is the creator of a doubt
+  const isCreator = (doubt) => {
+    return myDoubts.some(myDoubt => myDoubt.userid === doubt.userid);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <DashboardNavBar />
-     
-      {/* Ask a Doubt Form - Conditionally Visible */}
-      {showForm && (
-        <div className="bg-white shadow-md border-b px-6 py-4 mt-20 pt-20">
-          <form onSubmit={handlePostDoubt} className="max-w-3xl mx-auto space-y-4">
-            <h2 className="text-xl font-bold">Ask a Doubt</h2>
-            <input
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full border p-2 rounded"
-              rows={4}
-              required
-            />
-            <input
-              type="text"
-              placeholder="Topic (e.g., React, DBMS)"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <div className="flex gap-4">
-              <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
-                Post
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="bg-gray-300 text-black px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex p-6 gap-6 pt-20">
-        {/* Left Panel */}
-        <div className="w-1/3 border-r pr-4">
-          <h2 className="text-xl font-semibold mb-4">Your Doubts</h2>
-          {doubts.filter((d) => d.author === 'You').map((d) => (
-            <div key={d.id} className="mb-3 border rounded p-2 bg-gray-50 shadow">
-              <h3 className="font-semibold">{d.title}</h3>
-              <p className="text-sm text-gray-600">{d.topic}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Right Panel */}
-        <div className="w-2/3">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <label className="mr-2 font-semibold">Filter by Topic:</label>
-              <select
-                value={filterTopic}
-                onChange={(e) => setFilterTopic(e.target.value)}
-                className="border p-2 rounded"
-              >
-                {topics.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
+      <div className="container mx-auto px-4 py-8 pt-20">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Doubts & Questions</h1>
+          <div className="flex items-center gap-4">
             <button
-              onClick={() => setShowForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+              onClick={() => setShowPostForm(!showPostForm)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              + Post Doubt
+              {showPostForm ? 'Cancel' : 'Ask New Question'}
             </button>
           </div>
+        </div>
 
-          {/* Doubts List */}
-          <div className="space-y-6">
-         {doubts.map((doubt) => (
-  <div key={doubt.id} className="border p-4 rounded shadow">
-    <h3 className="text-lg font-semibold">{doubt.title}</h3>
-    <p className="text-gray-700 mb-2">{doubt.description}</p>
-    <p className="text-sm text-gray-500 mb-2">Topic: {doubt.topic}</p>
-
-    {/* Replies Section */}
-    {replies[doubt.id] && replies[doubt.id].length > 0 && (
-      <div className="bg-gray-50 p-3 rounded mt-3 space-y-2">
-        {replies[doubt.id].map((rep, idx) => (
-          <div key={idx} className="text-sm text-gray-800">
-            <span className="font-medium">You:</span> {rep}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
           </div>
-        ))}
-      </div>
-    )}
+        )}
 
-    {/* Reply Input */}
-    {activeReplyBox === doubt.id ? (
-      <div className="mt-3 space-y-2">
-        <textarea
-          rows={2}
-          value={replyInput[doubt.id] || ''}
-          onChange={(e) =>
-            setReplyInput((prev) => ({ ...prev, [doubt.id]: e.target.value }))
-          }
-          className="w-full border p-2 rounded"
-          placeholder="Write your reply..."
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              if (replyInput[doubt.id]) {
-                setReplies((prev) => ({
-                  ...prev,
-                  [doubt.id]: [...(prev[doubt.id] || []), replyInput[doubt.id]],
-                }));
-                setReplyInput((prev) => ({ ...prev, [doubt.id]: '' }));
-                setActiveReplyBox(null);
-              }
-            }}
-            className="bg-green-600 text-white px-3 py-1 rounded"
-          >
-            Post Reply
-          </button>
-          <button
-            onClick={() => setActiveReplyBox(null)}
-            className="bg-gray-300 text-black px-3 py-1 rounded"
-          >
-            Cancel
-          </button>
+        {/* Post Doubt Form */}
+        {showPostForm && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Ask a New Question</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-gray-700 mb-2" htmlFor="title">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2" htmlFor="topic">
+                    Topic
+                  </label>
+                  <select
+                    id="topic"
+                    name="topic"
+                    value={formData.topic}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select a topic</option>
+                    {topics.map(topic => (
+                      <option key={topic.topicid} value={topic.topic_name}>
+                        {topic.topic_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-2" htmlFor="question">
+                  Question
+                </label>
+                <textarea
+                  id="question"
+                  name="question"
+                  value={formData.question}
+                  onChange={handleInputChange}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                ></textarea>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                >
+                  Post Question
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Filter Section */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="font-medium text-gray-700">Filter by Topic:</span>
+            <button
+              onClick={() => setSelectedTopic('')}
+              className={`px-3 py-1 rounded-full text-sm ${!selectedTopic ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
+            >
+              All Topics
+            </button>
+            {topics.map(topic => (
+              <button
+                key={topic.topicid}
+                onClick={() => setSelectedTopic(topic.topic_name)}
+                className={`px-3 py-1 rounded-full text-sm ${selectedTopic === topic.topic_name ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
+              >
+                {topic.topic_name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content with 2-column Layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Sidebar - My Questions (30%) */}
+          <div className="lg:w-3/10">
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">My Questions</h2>
+              {myDoubts.length > 0 ? (
+                <div className="space-y-4">
+                  {myDoubts.map(doubt => (
+                    <div key={doubt.doubtid} className="border-b pb-3 last:border-0">
+                      <h3 className="font-medium text-gray-800">{doubt.title}</h3>
+                      <p className="text-sm text-gray-500 mb-1">{doubt.topic || 'General'}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{formatDate(doubt.createdat)}</span>
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                          Asked
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">You haven't asked any questions yet.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Center - All Doubts (70%) */}
+          <div className="lg:w-7/10">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : filteredDoubts.length > 0 ? (
+              <div className="space-y-6">
+                {filteredDoubts.map(doubt => (
+                  <div key={doubt.doubtid} className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg">
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <span className="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full mb-2">
+                            {doubt.topic || 'General'}
+                          </span>
+                          <h3 className="text-xl font-bold text-gray-800">{doubt.title}</h3>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">{formatDate(doubt.createdat)}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 mb-4">{doubt.question}</p>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden mr-2">
+                            {doubt.author_avatar ? (
+                              <img src={doubt.author_avatar} alt={doubt.author} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-xs font-medium text-gray-600">
+                                {doubt.author?.charAt(0)?.toUpperCase() || 'U'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm text-gray-600">{doubt.author}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isCreator(doubt) ? (
+                            <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">
+                              My Question
+                            </span>
+                          ) : null}
+                          <button
+                            onClick={() => handleExpandDoubt(doubt.doubtid)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          >
+                            {expandedDoubt === doubt.doubtid ? 'Hide Replies' : 'View Replies'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Replies Section */}
+                      {expandedDoubt === doubt.doubtid && (
+                        <div className="mt-6 border-t pt-4">
+                          <h4 className="text-lg font-semibold mb-4">Replies</h4>
+                          
+                          {/* Reply Form */}
+                          {!isCreator(doubt) && (
+                            <div className="mb-4">
+                              <textarea
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Write your reply..."
+                                rows="3"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              ></textarea>
+                              <div className="flex justify-end mt-2">
+                                <button
+                                  onClick={() => handleReplySubmit(doubt.doubtid)}
+                                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                  Post Reply
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Existing Replies */}
+                          <div className="space-y-4">
+                            {replies[doubt.doubtid]?.length > 0 ? (
+                              replies[doubt.doubtid].map(reply => (
+                                <div key={reply.doubt_replies_id} className="bg-gray-50 rounded-lg p-4">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center">
+                                      <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden mr-2">
+                                        <span className="text-xs font-medium text-gray-600">
+                                          {reply.author?.charAt(0)?.toUpperCase() || 'U'}
+                                        </span>
+                                      </div>
+                                      <span className="text-sm font-medium text-gray-700">{reply.author}</span>
+                                    </div>
+                                    <span className="text-xs text-gray-500">{formatDate(reply.createdat)}</span>
+                                  </div>
+                                  <p className="text-gray-600">{reply.reply}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-gray-500 text-center py-4">No replies yet. Be the first to help!</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No questions found</h3>
+                <p className="text-gray-500">
+                  {selectedTopic ? `No questions available for ${selectedTopic}. Try another topic or be the first to ask one!` : 'No questions available yet. Be the first to ask a question!'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    ) : (
-      <button
-        onClick={() => setActiveReplyBox(doubt.id)}
-        className="mt-2 text-blue-600 text-sm underline"
-      >
-        Reply
-      </button>
-    )}
-  </div>
-))}
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 
-export default DoubtsPage;
+export default Doubts;
