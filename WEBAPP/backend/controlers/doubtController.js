@@ -7,23 +7,13 @@ export const getDoubts = async (req, res) => {
     
     const doubts = topic 
       ? await sql`
-          SELECT d.*, 
-                 dpd.rating, 
-                 dpd.is_liked
-          FROM doubts2 d
-          LEFT JOIN doubt_post_details2 dpd 
-            ON d.doubtid = dpd.doubtid
-            AND dpd.userid = ${userid}  -- Join on the specific user's details
-          WHERE d.topic = ${topic}
+          SELECT * 
+          FROM doubts2 
+          WHERE topic = ${topic}
         `
       : await sql`
-          SELECT d.*, 
-                 dpd.rating, 
-                 dpd.is_liked
-          FROM doubts2 d
-          LEFT JOIN doubt_post_details2 dpd 
-            ON d.doubtid = dpd.doubtid
-            AND dpd.userid = ${userid}  -- Join on the specific user's details
+          SELECT *
+          FROM doubts2 
         `;
     
     res.json(doubts);
@@ -75,7 +65,24 @@ export const getUserDoubts=async (req, res) => {
 export const getReplies =async(req,res)=>{
     try {
          const {doubtid}=req.params;
-        const replies=await sql`SELECT * FROM doubt_replies2 WHERE doubtid=${doubtid}`
+         const userid =req.user.userid;
+        const replies = await sql`
+     SELECT 
+    d.doubt_replies_id,
+    d.userid AS reply_userid,
+    d.reply,
+    d.createdat,
+    u.full_name AS author,
+    r.rating,
+    r.is_liked
+  FROM doubt_replies2 d
+  JOIN users2 u ON d.userid = u.userid
+  LEFT JOIN reply_details2 r 
+    ON r.doubt_replies_id = d.doubt_replies_id AND r.userid = ${userid}
+  WHERE d.doubtid = ${doubtid}
+  ORDER BY d.createdat ASC;
+`
+
         res.json(replies);
     }
     catch (error) {
@@ -102,45 +109,45 @@ export const addReply =async(req,res)=>{
 }
 
 
-export const updateDoubtRating =async (req,res)=> {
+export const updateReplyRating =async (req,res)=> {
     try {
-         const { doubtid, rating } = req.body;
+         const { replyid, rating } = req.body;
         const userid = req.user.userid;
 
-        const doubt_post_details2 = await sql`
-        INSERT INTO doubt_post_details2 (doubtid, userid, rating)
-         VALUES (${doubtid}, ${userid}, ${rating})
-           ON CONFLICT (doubtid, userid)
+        const reply_details = await sql`
+        INSERT INTO reply_details2 (doubt_replies_id, userid, rating)
+         VALUES (${replyid}, ${userid}, ${rating})
+           ON CONFLICT (doubt_replies_id, userid)
            DO UPDATE SET rating = ${rating}
          RETURNING *;
 `;
 
-res.json(doubt_post_details2);
+res.json(reply_details);
 
     }
     catch (error) {
-      console.log("error occurecd  doubt while updating ratings ");
-      res.status(500).json({error:"failed to doubt update rating "});
+      console.log("error occurecd  reply while updating ratings ");
+      res.status(500).json({error:"failed to reply update rating "});
     }
 }
 
-export const toggleDoubtLike =async (req,res)=>{
+export const toggleReplyLike =async (req,res)=>{
           try {
-         const { doubtid,isLiked} = req.body;
+         const { replyid,isLiked} = req.body;
         const userid = req.user.userid;
 
-        const doubt_post_details2 = await sql`
-        INSERT INTO doubt_post_details2 (doubtid, userid)
-         VALUES (${doubtid}, ${userid})
-           ON CONFLICT (doubtid, userid)
+        const reply_details= await sql`
+        INSERT INTO reply_details2 (doubt_replies_id, userid)
+         VALUES (${replyid}, ${userid})
+           ON CONFLICT (doubt_replies_id, userid)
            DO UPDATE SET is_liked = ${isLiked}
          RETURNING *;
 `;
-res.json(doubt_post_details2);
+res.json(reply_details);
 
     }
     catch (error) {
-      console.log("error occurecd while updating doubt ratings ");
-      res.status(500).json({error:"failed to update doubt  rating "});
+      console.log("error occurecd while updating reply ratings ");
+      res.status(500).json({error:"failed to update reply  rating "});
     }
 }

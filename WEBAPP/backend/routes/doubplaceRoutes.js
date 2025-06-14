@@ -12,8 +12,8 @@ import { getReplies } from '../controlers/doubtController.js';
 
 import { addReply } from '../controlers/doubtController.js';
 
-import { toggleDoubtLike } from '../controlers/doubtController.js';
-import { updateDoubtRating } from '../controlers/doubtController.js';
+import { toggleReplyLike } from '../controlers/doubtController.js';
+import { updateReplyRating } from '../controlers/doubtController.js';
 
 const router = express.Router();
 
@@ -30,7 +30,7 @@ router.post("/doubts",authenticateToken,createDoubt);
 router.get('/my-doubts', authenticateToken,getUserDoubts);
 
 // GET /api/doubts/:doubtid/replies
-router.get('/doubts/:doubtid/replies', getReplies);
+router.get('/doubts/:doubtid/replies',authenticateToken ,getReplies);
 
 // POST /api/doubts/:doubtid/replies  
 router.post('/doubts/:doubtid/replies', authenticateToken,addReply);
@@ -38,8 +38,8 @@ router.post('/doubts/:doubtid/replies', authenticateToken,addReply);
 
 //posted related
 
-router.post('/update-doubt-rating',authenticateToken,updateDoubtRating);
-router.post('/toggle-doubt-like',authenticateToken,toggleDoubtLike);
+router.post('/update-reply-rating',authenticateToken,updateReplyRating);
+router.post('/toggle-reply-like',authenticateToken,toggleReplyLike);
 
 
 export default router;

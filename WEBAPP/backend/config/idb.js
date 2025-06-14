@@ -56,15 +56,6 @@ purchase_date TIMESTAMP DEFAULT NOW()
 ) `
 
 
-      await sql`CREATE TABLE IF NOT EXISTS doubt_post_details2 (
-      id SERIAL ,
-      userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
-    doubtid INTEGER  REFERENCES  doubts2(doubtid) ON DELETE CASCADE,
-    PRIMARY KEY (userid,doubtid),
-    is_liked BOOLEAN DEFAULT FALSE,
-    rating  INTEGER DEFAULT 0
-      )`
-
 await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
       userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
     courseid INTEGER  REFERENCES courses2(courseid) ON DELETE CASCADE,
@@ -89,6 +80,15 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
   userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
   createdAt TIMESTAMP DEFAULT NOW()
 );`
+ 
+ await sql`CREATE TABLE IF NOT EXISTS reply_details2 (
+     doubt_replies_id INTEGER REFERENCES doubt_replies2 ( doubt_replies_id) ON DELETE CASCADE,
+    userid INTEGER  REFERENCES users2(userid) ON DELETE CASCADE,
+      PRIMARY KEY (userid,doubt_replies_id),
+    is_liked BOOLEAN DEFAULT FALSE,
+    rating  INTEGER DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT NOW()
+ )` 
 
 
 console.log("database intialised");

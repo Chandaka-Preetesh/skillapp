@@ -305,12 +305,6 @@ console.log("doubts component rendering");
                           </span>
                           <h3 className="text-xl font-bold text-gray-800">{doubt.title}</h3>
                         </div>
-                        <StarRating 
-                         doubtid={doubt.doubtid}
-                        initialRating={doubt.rating} 
-                        initialIsLiked={doubt.is_liked}
-                        />
-                        {console.log(doubt.userid+"   "+doubt.rating+"  "+doubt.is_liked)}
                         <div className="text-right">
                           <p className="text-sm text-gray-500">{formatDate(doubt.createdat)}</p>
                         </div>
@@ -350,7 +344,7 @@ console.log("doubts component rendering");
                           <h4 className="text-lg font-semibold mb-4">Replies</h4>
                           
                           {/* Reply Form */}
-                          {!isCreator(doubt) && (
+                          {
                             <div className="mb-4">
                               <textarea
                                 value={replyText}
@@ -368,7 +362,7 @@ console.log("doubts component rendering");
                                 </button>
                               </div>
                             </div>
-                          )}
+                          }
 
                           {/* Existing Replies */}
                           <div className="space-y-4">
@@ -385,6 +379,12 @@ console.log("doubts component rendering");
                                       <span className="text-sm font-medium text-gray-700">{reply.author}</span>
                                     </div>
                                     <span className="text-xs text-gray-500">{formatDate(reply.createdat)}</span>
+                                    <StarRating 
+                                    initialIsLiked={reply.is_liked}
+                                    initialRating={reply.rating}
+                                    replyid={reply.doubt_replies_id}
+                                    />
+                                    {console.log(reply.rating+" "+reply.doubt_replies_id+" whil rendeiring "+reply.is_liked)}
                                   </div>
                                   <p className="text-gray-600">{reply.reply}</p>
                                 </div>

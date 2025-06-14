@@ -9,7 +9,7 @@ function StarRating({
   size = 'text-xl',
   disabled = false,
   courseid = null,
-  doubtid = null
+  replyid = null
 }) {
   const [rating, setRating] = useState(initialRating);
   const [hover, setHover] = useState(0);
@@ -38,10 +38,10 @@ function StarRating({
           courseid,
           rating: newRating,
         });
-      } else if (doubtid) {
-        console.log("reaced api call for doubt post"+newRating)
-        await axios.post("/api/doubtplace/update-doubt-rating", {
-          doubtid,
+      } else if (replyid) {
+        console.log("reaced api call for reply post"+newRating)
+        await axios.post("/api/doubtplace/update-reply-rating", {
+          replyid,
           rating: newRating,
         });
       }
@@ -61,9 +61,9 @@ function StarRating({
           courseid,
           isLiked: newLikeStatus,
         });
-      } else if (doubtid) {
-        await axios.post("/api/doubtplace/toggle-doubt-like", {
-          doubtid,
+      } else if (replyid) {
+        await axios.post("/api/doubtplace/toggle-reply-like", {
+          replyid,
           isLiked: newLikeStatus,
         });
       }
