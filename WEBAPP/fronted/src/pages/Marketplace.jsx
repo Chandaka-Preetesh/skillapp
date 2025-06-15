@@ -297,8 +297,8 @@ console.log("market comporendering");
               <h2 className="text-xl font-semibold mb-4 text-gray-800">My Purchased Courses</h2>
               {purchasedCourses.length > 0 ? (
                 <div className="space-y-4">
-                  {purchasedCourses.map(course => (
-                    <div key={course.id} className="border-b pb-3 last:border-0">
+                  {purchasedCourses.map( (course ,index)=> (
+                    <div key={index} className="border-b pb-3 last:border-0">
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
                       <p className="text-sm text-gray-500 mb-1">{course.type || 'General'}</p>
                       <div className="flex justify-between items-center">

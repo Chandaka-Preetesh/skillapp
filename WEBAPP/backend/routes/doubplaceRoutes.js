@@ -15,6 +15,8 @@ import { addReply } from '../controlers/doubtController.js';
 import { toggleReplyLike } from '../controlers/doubtController.js';
 import { updateReplyRating } from '../controlers/doubtController.js';
 
+import { getAverageReplyRating } from '../controlers/doubtController.js';
+
 const router = express.Router();
 
 router.get('/topics', getTopics);
@@ -40,6 +42,10 @@ router.post('/doubts/:doubtid/replies', authenticateToken,addReply);
 
 router.post('/update-reply-rating',authenticateToken,updateReplyRating);
 router.post('/toggle-reply-like',authenticateToken,toggleReplyLike);
+
+//average related 
+
+router.get('/get-average-reply-rating',getAverageReplyRating);
 
 
 export default router;

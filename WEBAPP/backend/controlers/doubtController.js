@@ -61,35 +61,34 @@ export const getUserDoubts=async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user doubts' });
   }
 };
-
-export const getReplies =async(req,res)=>{
-    try {
-         const {doubtid}=req.params;
-         const userid =req.user.userid;
-        const replies = await sql`
-     SELECT 
-    d.doubt_replies_id,
-    d.userid AS reply_userid,
-    d.reply,
-    d.createdat,
-    u.full_name AS author,
-    r.rating,
-    r.is_liked
-  FROM doubt_replies2 d
-  JOIN users2 u ON d.userid = u.userid
-  LEFT JOIN reply_details2 r 
-    ON r.doubt_replies_id = d.doubt_replies_id AND r.userid = ${userid}
-  WHERE d.doubtid = ${doubtid}
-  ORDER BY d.createdat ASC;
-`
-
-        res.json(replies);
-    }
-    catch (error) {
-        console.log("error occured while fetching replies")
-        res.status(500).json({error:"failed to fetch replies of doubt"});
-    }
-
+export const getReplies = async(req, res) => {     
+    try {          
+        const {doubtid} = req.params;          
+        const userid = req.user.userid;         
+        
+        const replies = await sql`      
+            SELECT      
+                d.doubt_replies_id,     
+                d.userid AS reply_userid,     
+                d.reply,     
+                d.createdat,     
+                u.full_name AS author,     
+                COALESCE(r.rating, 0) AS rating,     
+                COALESCE(r.is_liked, false) AS is_liked   
+            FROM doubt_replies2 d   
+            JOIN users2 u ON d.userid = u.userid   
+            LEFT JOIN reply_details2 r      
+                ON r.doubt_replies_id = d.doubt_replies_id AND r.userid = ${userid}   
+            WHERE d.doubtid = ${doubtid}   
+            ORDER BY d.createdat ASC; 
+        `          
+        
+        res.json(replies);     
+    }     
+    catch (error) {         
+        console.log("error occured while fetching replies", error);         
+        res.status(500).json({error:"failed to fetch replies of doubt"});     
+    }  
 }
 
 export const addReply =async(req,res)=>{
@@ -151,3 +150,25 @@ res.json(reply_details);
       res.status(500).json({error:"failed to update reply  rating "});
     }
 }
+
+export const getAverageReplyRating = async(req,res)=> {
+  try {
+  const { replyid } = req.query;
+
+  const result = await sql`
+    SELECT ROUND(avg(rating),1) as "avgRating"
+    FROM reply_details2 
+    WHERE doubt_replies_id = ${replyid} AND rating != 0
+  `;
+
+  let averageRating=0;
+    if(result.length==0) {return res.json(averageRating);}
+    averageRating = result[0].avgRating; 
+
+  res.json(averageRating );
+} catch (error) {
+  console.log("Error while getting average rating:", error.message);
+  res.status(500).json({ error: "Failed to get average reply rating" });
+}
+}
+

@@ -13,6 +13,8 @@ import { purchaseCourses } from '../controlers/marketController.js';
 import {updateCourseRating} from "../controlers/marketController.js";
 import { toggleCourseLike } from '../controlers/marketController.js';
 
+import {getAverageCourseRating} from "../controlers/marketController.js";
+
 const router = express.Router();
 
 router.get('/topics', getTopics);
@@ -70,6 +72,10 @@ router.get('/transactions', authenticateToken, async (req, res) => {
 
 router.post('/update-course-rating',authenticateToken,updateCourseRating);
 router.post('/toggle-course-like',authenticateToken,toggleCourseLike);
+
+//average related
+
+router.get('/get-average-course-rating',getAverageCourseRating);
 
 
 export default router;

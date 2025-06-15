@@ -384,7 +384,8 @@ console.log("doubts component rendering");
                                     initialRating={reply.rating}
                                     replyid={reply.doubt_replies_id}
                                     />
-                                    {console.log(reply.rating+" "+reply.doubt_replies_id+" whil rendeiring "+reply.is_liked)}
+                                    {console.log(reply)}
+                                    {console.log(" replyReceived")}
                                   </div>
                                   <p className="text-gray-600">{reply.reply}</p>
                                 </div>

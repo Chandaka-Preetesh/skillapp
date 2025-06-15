@@ -236,3 +236,32 @@ res.json(course_post_details2);
       res.status(500).json({error:"failed to update rating "});
     }
 }
+
+export const getAverageCourseRating = async (req, res) => {
+  try {
+    const { courseid } = req.query;
+    console.log("Received courseid:", courseid);
+
+    const result = await sql`
+      SELECT ROUND(AVG(rating), 1) AS "averageRating"
+      FROM course_post_details2
+      WHERE courseid = ${courseid} AND rating != 0
+    `;
+
+    console.log("SQL result:", result);
+
+    let averageRating = 0;
+
+    if (result.length === 0 || result[0].averageRating === null) {
+      console.log("No valid ratings — returning 0");
+      return res.json(averageRating); // early return
+    }
+
+    averageRating = result[0].averageRating;
+    console.log("Final averageRating to return:", averageRating);
+    res.json(averageRating);
+  } catch (error) {
+    console.error("Error while getting average course rating:", error);
+    res.status(500).json({ error: "failed to get average rating" });
+  }
+};

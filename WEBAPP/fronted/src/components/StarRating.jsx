@@ -3,7 +3,6 @@ import axios from "../utils/axios.js";
 
 function StarRating({
   initialRating = 0,
-  averageRating = 0,
   initialIsLiked = false,
   initialLikeCount = 0,
   size = 'text-xl',
@@ -15,6 +14,7 @@ function StarRating({
   const [hover, setHover] = useState(0);
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [avgDisp,setAvgDisp]=useState(0);
 
   useEffect(() => {
     setRating(initialRating);
@@ -38,12 +38,20 @@ function StarRating({
           courseid,
           rating: newRating,
         });
+        const response= await axios.get("/api/marketplace/get-average-course-rating", {params:{courseid} }); 
+        console.log(response.data+"reponse resive");
+        let averageRating=Number(response.data);
+        setAvgDisp(averageRating || 0);
       } else if (replyid) {
         console.log("reaced api call for reply post"+newRating)
         await axios.post("/api/doubtplace/update-reply-rating", {
           replyid,
           rating: newRating,
         });
+        const response=await axios.get("/api/doubtplace/get-average-reply-rating",{ params:{replyid} });
+        console.log(response.data+"received while updation")
+        let averageRating=Number(response.data);
+        setAvgDisp(averageRating || 0);
       }
     } catch (err) {
       console.error("Failed to update rating:", err);
@@ -71,6 +79,30 @@ function StarRating({
       console.error("Failed to toggle like:", err);
     }
   };
+
+  useEffect(() => {
+  async function fetchAverageRating() {
+    try {
+      console.log("while monuting get avg");
+      if (courseid) {
+        const response = await axios.get("/api/marketplace/get-average-course-rating", {
+          params: { courseid }
+        });
+        console.log("while mounting"+response.data);
+        setAvgDisp(response.data);
+      } else if (replyid) {
+        const response = await axios.get("/api/doubtplace/get-average-reply-rating", {
+          params: { replyid }
+        });
+        setAvgDisp(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch average rating:", err);
+    }
+  }
+
+  fetchAverageRating();
+}, [courseid, replyid]);
 
   return (
     <div className="flex flex-col gap-1 text-gray-700">
@@ -105,7 +137,7 @@ function StarRating({
 
       {/* Average Rating */}
       <div className="text-sm text-gray-500">
-        Avg: {averageRating.toFixed(1)} / 5
+        Avg: {avgDisp} 
       </div>
 
       {/* Like Button */}
@@ -125,4 +157,4 @@ function StarRating({
   );
 }
 
-export default StarRating;
+export default StarRating; 
