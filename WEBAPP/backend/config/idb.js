@@ -90,6 +90,17 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
     createdAt TIMESTAMP DEFAULT NOW()
  )` 
 
+ await sql`
+ CREATE TABLE IF NOT EXISTS course_transactions2 (
+    transactionid SERIAL PRIMARY KEY,
+    courseid INTEGER REFERENCES courses2(courseid) ON DELETE CASCADE,
+    buyerid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
+    ownerid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
+    amount NUMERIC(10,2),
+    transaction_date TIMESTAMP DEFAULT NOW()
+);
+ `
+    
 
 console.log("database intialised");
     }

@@ -68,9 +68,9 @@ export const purchaseCourses=async (req, res) => {
     if (!course) {
       return res.status(404).json({ error: 'Course not found' });
     }
-
+    const sellerid=course.userid;
     // Check if user is trying to buy their own course
-    if (course.userid === buyerid) {
+    if (sellerid === buyerid) {
       return res.status(400).json({ error: 'You cannot purchase your own course' });
     }
 
@@ -116,7 +116,16 @@ export const purchaseCourses=async (req, res) => {
     const [updatedUser] = await sql`
       SELECT * FROM skillcoin2 WHERE userid = ${buyerid}
     `;
-
+    let selleramount=Number(course.price)*0.85;
+    await sql`
+  INSERT INTO course_transactions2 (courseid, buyerid, ownerid, amount)
+  VALUES (${courseid}, ${buyerid}, ${sellerid}, ${selleramount})
+`
+    await sql`
+       UPDATE skillcoin2
+      SET balance = balance + ${selleramount}
+      WHERE userid = ${sellerid}
+    `
     res.status(201).json({ 
       message: 'Course is purchased successfully',
       newBalance: updatedUser.balance

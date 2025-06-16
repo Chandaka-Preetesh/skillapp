@@ -1,173 +1,155 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/button';
-import { motion } from 'framer-motion';
+import axios from '../utils/axios.js';
+import CalendarHeatmap from 'react-calendar-heatmap';
+import 'react-calendar-heatmap/dist/styles.css';
 
-export default function ProfilePage() {
+const ProfilePage = () => {
   const navigate = useNavigate();
-  const [user] = useState(JSON.parse(localStorage.getItem('user')));
-  const skills = [
-    { name: 'JavaScript', level: 85, badge: '🏆', projects: 12 },
-    { name: 'React', level: 75, badge: '⭐', projects: 8 },
-    { name: 'Node.js', level: 65, badge: '🌟', projects: 5 },
-    { name: 'Python', level: 60, badge: '🎯', projects: 4 },
-  ];
 
-  const badges = [
-    { name: 'Master Teacher', icon: '👨‍🏫', description: 'Taught 50+ students', color: 'bg-yellow-100' },
-    { name: 'Problem Solver', icon: '🧩', description: 'Solved 100+ challenges', color: 'bg-blue-100' },
-    { name: 'Community Leader', icon: '👑', description: 'Top contributor', color: 'bg-purple-100' },
-    { name: 'Quick Learner', icon: '🚀', description: 'Completed 10 courses', color: 'bg-green-100' },
-    { name: 'Team Player', icon: '🤝', description: 'Collaborated on 20+ projects', color: 'bg-pink-100' },
-    { name: 'Innovation Star', icon: '💡', description: 'Created 5 original projects', color: 'bg-indigo-100' },
-  ];
+  const [userInfo, setUserInfo] = useState({ username: '', email: '' });
+  const [stats, setStats] = useState({});
+  const [activityHeatmap, setActivityHeatmap] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [earnings, setEarnings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        const [userRes, statsRes, streakRes, activityRes, earningsRes] = await Promise.all([
+          axios.get('/api/profileplace/userinfo'),
+          axios.get('/api/profileplace/stats'),
+          axios.get('/api/profileplace/streak'), // new heatmap source
+          axios.get('/api/profileplace/recent-activity'),
+          axios.get('/api/profileplace/my-earnings')
+        ]);
+
+        setUserInfo(userRes.data);
+        setStats(statsRes.data);
+        console.log(userRes.data);
+        console.log(statsRes.data);
+        // Format streak data to { date: 'YYYY-MM-DD', count: number }
+        const formattedHeatmap = streakRes.data.map(entry => ({
+          date: entry.date,
+          count: Number(entry.count),
+        }));
+        setActivityHeatmap(formattedHeatmap);
+
+        setRecentActivity(activityRes.data);
+        setEarnings(earningsRes.data);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setIsLoading(false);
+        localStorage.clear();
+        navigate('/login', { replace: true });
+      }
+    };
+
+    fetchProfileData();
+  }, [navigate]);
+
+  // Calculate date range for heatmap (last 2 months)
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - 2);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Top Navigation Bar */}
-      <nav className="bg-white shadow-sm fixed w-full z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/user-home')}
-                className="text-xl font-bold text-gray-900"
-              >
-                SkillShare
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold">{userInfo.username}</h2>
+            <p className="text-gray-500">{userInfo.email}</p>
+          </div>
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+            onClick={() => {
+              localStorage.clear();
+              navigate('/login', { replace: true });
+            }}
+          >
+            Logout
+          </button>
+        </div>
+
+        {/* Stats and Heatmap Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Stats */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-xl font-bold mb-4">Profile Stats</h3>
+            <p>Courses: {stats.totalCourses} (Avg Rating: {stats.avgCourseRating})</p>
+            <p>Doubts: {stats.totalDoubts} (Avg Rating: {stats.avgDoubtRating})</p>
+            <p>Coins Earned (Lifetime): {stats.coinsLifetime}</p>
+            <p>Coins Earned (Last Month): {stats.coinsLastMonth}</p>
+          </div>
+
+          {/* Heatmap for 2 months */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-xl font-bold mb-4">Activity Streak (Last 2 Months)</h3>
+            <CalendarHeatmap
+              startDate={startDate}
+              endDate={endDate}
+              values={activityHeatmap}
+              classForValue={value => {
+                if (!value || value.count === 0) return 'color-empty';
+                if (value.count < 2) return 'color-scale-1';
+                if (value.count < 4) return 'color-scale-2';
+                if (value.count < 6) return 'color-scale-3';
+                return 'color-scale-4';
+              }}
+              tooltipDataAttrs={value => ({
+                'data-tip': `${value.date}: ${value.count} activities`,
+              })}
+              showWeekdayLabels
+            />
           </div>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Profile Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-sm p-8 mb-8"
-          >
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <img
-                  src={user?.avatar || 'https://ui-avatars.com/api/?name=' + user?.full_name}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full"
-                />
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full border-4 border-white flex items-center justify-center">
-                  <span className="text-sm font-bold">5</span>
+        {/* Activity and Earnings */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Recent Activity */}
+          <div className="bg-white p-6 rounded-lg shadow h-60 overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
+            {recentActivity.length === 0 ? (
+              <p className="text-gray-500">No activity yet</p>
+            ) : (
+              recentActivity.map((item, idx) => (
+                <div key={idx} className="p-2 mb-2 bg-gray-100 rounded">
+                  {item.type}: {item.activity}
                 </div>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{user?.full_name}</h1>
-                <p className="text-gray-600 mt-1">Full Stack Developer</p>
-                <div className="flex items-center mt-2 space-x-4">
-                  <div className="flex items-center">
-                    <span className="text-yellow-500 mr-1">⭐</span>
-                    <span className="text-gray-600">4.8 Rating</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-blue-500 mr-1">👥</span>
-                    <span className="text-gray-600">120 Students</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-green-500 mr-1">📚</span>
-                    <span className="text-gray-600">15 Courses</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Skills and Badges Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Skills Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm p-6"
-            >
-              <h2 className="text-xl font-semibold mb-6">Skills & Expertise</h2>
-              <div className="space-y-6">
-                {skills.map((skill, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <span className="mr-2">{skill.badge}</span>
-                        <span className="font-medium">{skill.name}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">{skill.projects} projects</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full">
-                      <div
-                        className="h-full bg-blue-600 rounded-full"
-                        style={{ width: `${skill.level}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Badges Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-xl shadow-sm p-6"
-            >
-              <h2 className="text-xl font-semibold mb-6">Achievements & Badges</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {badges.map((badge, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors"
-                  >
-                    <div className={`w-12 h-12 ${badge.color} rounded-full flex items-center justify-center mr-4`}>
-                      <span className="text-2xl">{badge.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{badge.name}</h4>
-                      <p className="text-sm text-gray-500">{badge.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+              ))
+            )}
           </div>
 
-          {/* Recent Activity Timeline */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 bg-white rounded-xl shadow-sm p-6"
-          >
-            <h2 className="text-xl font-semibold mb-6">Recent Activity</h2>
-            <div className="space-y-6">
-              {[
-                { icon: '📚', title: 'Completed React Advanced Course', time: '2 days ago', color: 'bg-blue-100' },
-                { icon: '🏆', title: 'Earned Master Teacher Badge', time: '1 week ago', color: 'bg-yellow-100' },
-                { icon: '👥', title: 'Helped 5 students with JavaScript', time: '2 weeks ago', color: 'bg-green-100' },
-              ].map((activity, index) => (
-                <div key={index} className="flex items-start">
-                  <div className={`${activity.color} w-10 h-10 rounded-full flex items-center justify-center mr-4`}>
-                    <span className="text-xl">{activity.icon}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{activity.title}</h4>
-                    <p className="text-sm text-gray-500">{activity.time}</p>
-                  </div>
+          {/* Earnings */}
+          <div className="bg-white p-6 rounded-lg shadow h-60 overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Earnings</h3>
+            {earnings.length === 0 ? (
+              <p className="text-gray-500">No earnings yet</p>
+            ) : (
+              earnings.map((entry, idx) => (
+                <div key={idx} className="p-2 mb-2 bg-green-100 rounded">
+                  {new Date(entry.month).toLocaleString('default', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}: ₹{entry.total_received}
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-} 
+};
+
+export default ProfilePage;

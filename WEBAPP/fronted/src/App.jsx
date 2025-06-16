@@ -13,6 +13,7 @@ import UserHomePage from './pages/UserHomePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Marketplace from './pages/Marketplace';
 import DoubtPlace from './pages/DoubtPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
 
@@ -41,7 +42,6 @@ function App() {
           } 
         />
        }
-         {
           <Route 
           path="/doubt" 
           element={
@@ -50,7 +50,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
-      }
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
     </div>
