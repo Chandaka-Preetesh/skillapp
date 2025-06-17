@@ -8,7 +8,7 @@ import { dirname, join } from 'path';
 import session from 'express-session';
 import passport from 'passport';
 
-import testRouter from "./routes/testRoute.js";
+
 import googleauthRoutes from "./routes/googleauthRoutes.js"
 import emailauthRoutes from "./routes/emailauthRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
@@ -70,7 +70,6 @@ app.get("/",(req,res)=>{
 });
 
 // Routes related to google autentication
-app.use("/api/t", testRouter);
 app.use("/api/googleauth",googleauthRoutes);
 
 //email related login and register
@@ -80,13 +79,15 @@ app.use("/api/emailauth",emailauthRoutes);
 //to use for a particular use related data 
 app.use("/api/me",userRoutes);
 
-//marketplace routes
+//market page   routes
 
 app.use("/api/marketplace",marketplaceRoutes);
 
-//doubtplace routes
+//doubts page  routes
 
 app.use("/api/doubtplace",doubtPlaceRoutes);
+
+//profilepage routes
 
 app.use("/api/profileplace",profileRoutes);
 

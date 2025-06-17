@@ -15,31 +15,34 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+
     const fetchProfileData = async () => {
       try {
         setIsLoading(true);
         const [userRes, statsRes, streakRes, activityRes, earningsRes] = await Promise.all([
           axios.get('/api/profileplace/userinfo'),
           axios.get('/api/profileplace/stats'),
-          axios.get('/api/profileplace/streak'), // new heatmap source
+          axios.get('/api/profileplace/streak'),
           axios.get('/api/profileplace/recent-activity'),
-          axios.get('/api/profileplace/my-earnings')
+          axios.get('/api/profileplace/my-earnings'),
         ]);
+
 
         setUserInfo(userRes.data);
         setStats(statsRes.data);
-        console.log(userRes.data);
-        console.log(statsRes.data);
-        // Format streak data to { date: 'YYYY-MM-DD', count: number }
-        const formattedHeatmap = streakRes.data.map(entry => ({
-          date: entry.date,
-          count: Number(entry.count),
-        }));
-        setActivityHeatmap(formattedHeatmap);
-
+        setActivityHeatmap(
+          streakRes.data.map(entry => ({
+            date: entry.date,
+            count: Number(entry.count),
+          }))
+        );
         setRecentActivity(activityRes.data);
         setEarnings(earningsRes.data);
         setIsLoading(false);
+        console.log("reponses recived");
+        console.log(userRes.data);
+        console.log(statsRes.data);
+        console.log(earningsRes.data);
       } catch (err) {
         console.error('Error fetching profile data:', err);
         setIsLoading(false);
@@ -51,23 +54,23 @@ const ProfilePage = () => {
     fetchProfileData();
   }, [navigate]);
 
-  // Calculate date range for heatmap (last 2 months)
   const endDate = new Date();
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - 2);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8 pt-20">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <button
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg"
             onClick={() => navigate(-1)}
           >
-            Back
+            ⬅ Back
           </button>
           <div className="text-center">
-            <h2 className="text-2xl font-semibold">{userInfo.username}</h2>
+            <h2 className="text-3xl font-semibold text-gray-800">{userInfo.username}</h2>
             <p className="text-gray-500">{userInfo.email}</p>
           </div>
           <button
@@ -81,20 +84,22 @@ const ProfilePage = () => {
           </button>
         </div>
 
-        {/* Stats and Heatmap Section */}
+        {/* Stats and Heatmap */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Stats */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-bold mb-4">Profile Stats</h3>
-            <p>Courses: {stats.totalCourses} (Avg Rating: {stats.avgCourseRating})</p>
-            <p>Doubts: {stats.totalDoubts} (Avg Rating: {stats.avgDoubtRating})</p>
-            <p>Coins Earned (Lifetime): {stats.coinsLifetime}</p>
-            <p>Coins Earned (Last Month): {stats.coinsLastMonth}</p>
+          {/* Profile Stats */}
+          <div className="bg-white p-6 rounded-2xl shadow-md">
+            <h3 className="text-xl font-semibold text-green-700 border-b pb-2 mb-4">📊 Profile Stats</h3>
+            <ul className="text-gray-700 space-y-2">
+              <li>Courses: <strong>{stats.totalCourses}</strong> (Avg Rating: {stats.avgCourseRating})</li>
+              <li>Doubts: <strong>{stats.totalDoubts}</strong> (Avg Rating: {stats.avgDoubtRating})</li>
+              <li>Coins Earned (Lifetime): <strong>₹{stats.coinsLifetime}</strong></li>
+              <li>Coins Earned (Last Month): <strong>₹{stats.coinsLastMonth}</strong></li>
+            </ul>
           </div>
 
-          {/* Heatmap for 2 months */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-bold mb-4">Activity Streak (Last 2 Months)</h3>
+          {/* Heatmap */}
+          <div className="bg-white p-6 rounded-2xl shadow-md">
+            <h3 className="text-xl font-semibold text-green-700 border-b pb-2 mb-4">🔥 Activity Streak (Last 2 Months)</h3>
             <CalendarHeatmap
               startDate={startDate}
               endDate={endDate}
@@ -117,27 +122,27 @@ const ProfilePage = () => {
         {/* Activity and Earnings */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Recent Activity */}
-          <div className="bg-white p-6 rounded-lg shadow h-60 overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
+          <div className="bg-white p-6 rounded-2xl shadow-md h-60 overflow-y-auto">
+            <h3 className="text-xl font-semibold text-green-700 border-b pb-2 mb-4">🕒 Recent Activity</h3>
             {recentActivity.length === 0 ? (
               <p className="text-gray-500">No activity yet</p>
             ) : (
               recentActivity.map((item, idx) => (
-                <div key={idx} className="p-2 mb-2 bg-gray-100 rounded">
-                  {item.type}: {item.activity}
+                <div key={idx} className="p-2 mb-2 bg-gray-100 rounded text-gray-800">
+                  <strong>{item.type}</strong>: {item.activity}
                 </div>
               ))
             )}
           </div>
 
           {/* Earnings */}
-          <div className="bg-white p-6 rounded-lg shadow h-60 overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">Earnings</h3>
+          <div className="bg-white p-6 rounded-2xl shadow-md h-60 overflow-y-auto">
+            <h3 className="text-xl font-semibold text-green-700 border-b pb-2 mb-4">💰 Earnings</h3>
             {earnings.length === 0 ? (
               <p className="text-gray-500">No earnings yet</p>
             ) : (
               earnings.map((entry, idx) => (
-                <div key={idx} className="p-2 mb-2 bg-green-100 rounded">
+                <div key={idx} className="p-2 mb-2 bg-green-100 rounded text-green-800">
                   {new Date(entry.month).toLocaleString('default', {
                     month: 'long',
                     year: 'numeric',

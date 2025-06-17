@@ -66,3 +66,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.color-empty {
+  fill: #e5e7eb; /* light gray */
+}
+.color-scale-1 {
+  fill: #bbf7d0; /* green-200 */
+}
+.color-scale-2 {
+  fill: #86efac; /* green-300 */
+}
+.color-scale-3 {
+  fill: #4ade80; /* green-400 */
+}
+.color-scale-4 {
+  fill: #22c55e; /* green-500 */
+}
