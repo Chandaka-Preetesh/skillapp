@@ -3,7 +3,7 @@ import DashboardNavBar from '../components/dashboard/DashboardNavBar';
 import axios from '../utils/axios.js';
 import  { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import toast from 'react-hot-toast';
 import StarRating from '../components/StarRating';
 
 const Doubts = () => {
@@ -85,6 +85,7 @@ console.log("doubts component rendering");
         question: '',
         topic: ''
       });
+      toast.success('Doubt posted successfully');
     } catch (err) {
       console.error('Error creating doubt:', err);
       setError('Failed to create doubt. Please try again.');

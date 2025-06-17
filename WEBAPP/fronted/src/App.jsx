@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 
 
+
 import HomePage from "./pages/HomePage";
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -14,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Marketplace from './pages/Marketplace';
 import DoubtPlace from './pages/DoubtPage';
 import ProfilePage from './pages/ProfilePage';
+
 
 function App() {
 

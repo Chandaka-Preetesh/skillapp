@@ -11,9 +11,9 @@ const Stats=()=>{
               { number: "10K+", label: "Skills Exchanged" },
               { number: "100K+", label: "Learning Hours" },
               { number: "4.6/5", label: "User Rating" }
-            ].map((stat) => (
+            ].map((stat,index) => (
               <motion.div
-                key={stat.label}
+                key={index}
                 className="text-center bg-white rounded-xl shadow-sm p-8 hover:scale-105 transition-transform duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}

@@ -17,7 +17,7 @@ const Works = () => {
               How It Works
             </h2>
             <p className="text-lg text-gray-600">
-              Your journey to skill growth in three easy steps.
+              Your journey to skill growth in four easy steps.
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10">

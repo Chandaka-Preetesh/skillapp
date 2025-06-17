@@ -3,6 +3,7 @@ import DashboardNavBar from '../components/dashboard/DashboardNavBar';
 import axios from '../utils/axios.js';
 import  { useState, useEffect } from 'react';
 import StarRating  from '../components/StarRating';
+import { toast } from 'react-hot-toast';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -103,35 +104,38 @@ console.log("market comporendering");
   };
 
   // Handle course purchase
-  const handlePurchase = async (courseid) => {
-    try {
-      const response = await axios.post(`/api/marketplace/courses/${courseid}/purchase`);
-      
-      // Update purchased courses list
-      const purchasedCourse = courses.find(c => c.courseid === courseid);
-      setPurchasedCourses(prev => [...prev, purchasedCourse]);
-      
-      // Update skill coins balance
-      setSkillCoins(response.data.newBalance);
-      
-      alert('Course purchased successfully!');
-    } catch (err) {
-      console.error('Error purchasing course:', err);
-      if (err.response?.status === 400) {
-        if (err.response.data.error.includes('Insufficient')) {
-          alert('Insufficient SkillCoins balance to purchase this course.');
-        } else if (err.response.data.error.includes('own course')) {
-          alert('You cannot purchase your own course.');
-        } else if (err.response.data.error.includes('already purchased')) {
-          alert('You have already purchased this course.');
-        } else {
-          alert(err.response.data.error);
-        }
+ const handlePurchase = async (courseid) => {
+  const loadingToastId = toast.loading('Processing your purchase...'); // Show loading
+
+  try {
+    const response = await axios.post(`/api/marketplace/courses/${courseid}/purchase`);
+
+    // Update purchased courses list
+    const purchasedCourse = courses.find(c => c.courseid === courseid);
+    setPurchasedCourses(prev => [...prev, purchasedCourse]);
+
+    // Update skill coins balance
+    setSkillCoins(response.data.newBalance);
+
+    toast.success('Course purchased successfully!', { id: loadingToastId }); // Replace loading with success
+  } catch (err) {
+    console.error('Error purchasing course:', err);
+
+    if (err.response?.status === 400) {
+      if (err.response.data.error.includes('Insufficient')) {
+        toast.error('Insufficient SkillCoins to purchase this course', { id: loadingToastId });
+      } else if (err.response.data.error.includes('own course')) {
+        toast.error('You cannot purchase your own course.', { id: loadingToastId });
+      } else if (err.response.data.error.includes('already purchased')) {
+        toast.error('You have already purchased this course.', { id: loadingToastId });
       } else {
-        alert('Failed to purchase course. Please try again.');
+        toast.error(err.response.data.error || 'Unknown error', { id: loadingToastId });
       }
+    } else {
+      toast.error('Failed to purchase course. Please try again.', { id: loadingToastId });
     }
-  };
+  }
+};
 
   // Check if user is the creator of a course
   const isCreator = (course) => {

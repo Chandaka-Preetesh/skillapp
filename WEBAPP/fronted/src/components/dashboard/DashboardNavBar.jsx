@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const DashboardNavBar = () => {
   const navigate = useNavigate();
@@ -8,7 +9,10 @@ const DashboardNavBar = () => {
   const handleLogout = () => {
     // TODO: Implement logout logic here
     // Clear user session/token
-    navigate('/login');
+   localStorage.removeItem('token');
+  localStorage.removeItem('user');
+    toast.success('Logged out successfully!');
+      navigate('/');
   };
 
   const isActiveLink = (path) => {
@@ -28,21 +32,21 @@ const DashboardNavBar = () => {
               Marketplace
             </Link>
             <Link
-              to="/community"
-              className={`font-medium transition-colors ${isActiveLink('/community')}`}
+              to="/doubt"
+              className={`font-medium transition-colors ${isActiveLink('/doubt')}`}
             >
-              Community
+              Doubtplace
             </Link>
             <Link
-              to="/explore"
+              to="/profile"
               className={`font-medium transition-colors ${isActiveLink('/explore')}`}
             >
-              Explore
+              Profile
             </Link>
           </div>
 
           {/* Center - Logo */}
-          <Link to="/dashboard" className="text-2xl font-bold text-blue-600">
+          <Link to="/explore" className="text-2xl font-bold text-blue-600">
             SkillHub
           </Link>
 
