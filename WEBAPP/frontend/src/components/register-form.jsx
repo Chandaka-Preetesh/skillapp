@@ -1,6 +1,7 @@
 import { Button } from "../components/ui/button"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import dotenv from dotenv;
 
 export function RegisterForm({ className, ...props }) {
   const [full_name, setFullName] = useState("")
@@ -10,7 +11,7 @@ export function RegisterForm({ className, ...props }) {
   const [validationErrors, setValidationErrors] = useState([])
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-
+dotenv.config();
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -18,7 +19,7 @@ export function RegisterForm({ className, ...props }) {
     setLoading(true)
 
     try {
-      const response = await fetch("http://localhost:3000/api/emailauth/register", {
+      const response = await fetch(`${process.env.CLIENT_URL}/api/emailauth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,7 +55,7 @@ export function RegisterForm({ className, ...props }) {
   }
 
   const handleGoogleSignUp = () => {
-    window.location.href = 'http://localhost:3000/api/googleauth/google';
+    window.location.href = `${process.env.CLIENT_URL}/api/googleauth/google`;
   }
 
   return (

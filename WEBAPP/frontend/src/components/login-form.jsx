@@ -1,6 +1,9 @@
 import { Button } from "../components/ui/button"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import dotenv from dotenv;
+
+dotenv.config();
 
 export function LoginForm({
   className,
@@ -60,7 +63,7 @@ export function LoginForm({
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:3000/api/emailauth/login', {
+      const response = await fetch(`${process.env.CLIENT_URL}/api/emailauth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +107,7 @@ export function LoginForm({
     
     console.log('Initiating Google OAuth login');
     // Redirect to Google OAuth endpoint
-    window.location.href = 'http://localhost:3000/api/googleauth/google'
+    window.location.href = `${process.env.CLIENT_URL}/api/googleauth/google`
   }
 
   return (
