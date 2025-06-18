@@ -1,9 +1,9 @@
 import { Button } from "../components/ui/button"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import dotenv from dotenv;
+import dotenv from "dotenv";
 
-dotenv.config();
+
 
 export function LoginForm({
   className,
@@ -26,7 +26,7 @@ export function LoginForm({
       setError(decodeURIComponent(errorMsg))
       return;
     }
-
+    dotenv.config();
     // Check for successful OAuth login
     const token = params.get('token')
     const userData = params.get('user')

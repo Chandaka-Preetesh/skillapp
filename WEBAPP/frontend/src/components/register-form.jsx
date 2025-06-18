@@ -1,7 +1,7 @@
 import { Button } from "../components/ui/button"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import dotenv from dotenv;
+import dotenv from "dotenv";
 
 export function RegisterForm({ className, ...props }) {
   const [full_name, setFullName] = useState("")
