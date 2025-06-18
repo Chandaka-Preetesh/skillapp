@@ -1,7 +1,6 @@
 import { Button } from "../components/ui/button"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import dotenv from "dotenv";
 
 
 
@@ -26,7 +25,6 @@ export function LoginForm({
       setError(decodeURIComponent(errorMsg))
       return;
     }
-    dotenv.config();
     // Check for successful OAuth login
     const token = params.get('token')
     const userData = params.get('user')
@@ -63,7 +61,7 @@ export function LoginForm({
     setLoading(true)
 
     try {
-      const response = await fetch(`${process.env.CLIENT_URL}/api/emailauth/login`, {
+      const response = await fetch(`https://skillapp-2.onrender.com/api/emailauth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +105,7 @@ export function LoginForm({
     
     console.log('Initiating Google OAuth login');
     // Redirect to Google OAuth endpoint
-    window.location.href = `${process.env.CLIENT_URL}/api/googleauth/google`
+    window.location.href = `https://skillapp-2.onrender.com/login/api/googleauth/google`
   }
 
   return (

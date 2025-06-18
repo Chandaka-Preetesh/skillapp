@@ -1,7 +1,6 @@
 import { Button } from "../components/ui/button"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import dotenv from "dotenv";
 
 export function RegisterForm({ className, ...props }) {
   const [full_name, setFullName] = useState("")
@@ -11,7 +10,6 @@ export function RegisterForm({ className, ...props }) {
   const [validationErrors, setValidationErrors] = useState([])
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-dotenv.config();
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -19,7 +17,7 @@ dotenv.config();
     setLoading(true)
 
     try {
-      const response = await fetch(`${process.env.CLIENT_URL}/api/emailauth/register`, {
+      const response = await fetch(`https://skillapp-2.onrender.com/login/api/emailauth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,7 +53,7 @@ dotenv.config();
   }
 
   const handleGoogleSignUp = () => {
-    window.location.href = `${process.env.CLIENT_URL}/api/googleauth/google`;
+    window.location.href = `https://skillapp-2.onrender.com/login/api/googleauth/google`;
   }
 
   return (
