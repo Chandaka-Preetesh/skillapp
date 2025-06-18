@@ -45,7 +45,9 @@ export const createCourse=async (req, res) => {
         courses2.*,
         (SELECT full_name FROM users2 WHERE userid = ${userid}) as author
     `;
-
+     let type1="Posted a Course";
+     let activity1=`Posted a Course title : ${title}`;
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1})`
     res.status(201).json(course);
   } catch (error) {
     console.error('Error creating course:', error);
@@ -126,6 +128,9 @@ export const purchaseCourses=async (req, res) => {
       SET balance = balance + ${selleramount}
       WHERE userid = ${sellerid}
     `
+     let type1=`Purchased a Course`;
+     let activity1=`Purchases Course : ${course.title}`;
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1})`
     res.status(201).json({ 
       message: 'Course is purchased successfully',
       newBalance: updatedUser.balance

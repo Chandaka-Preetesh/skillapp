@@ -99,9 +99,17 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
     amount NUMERIC(10,2),
     transaction_date TIMESTAMP DEFAULT NOW()
 );
+ `    
+ await sql`
+  CREATE TABLE IF NOT EXISTS  doubt_transactions2 (
+    transactionid SERIAL PRIMARY KEY,
+    doubt_replies_id INTEGER REFERENCES doubt_replies2(doubt_replies_id) ON DELETE CASCADE,
+    poster_id INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
+    ownerid INTEGER REFERENCES users2(userid) ON DELETE CASCADE,
+    amount NUMERIC(10,2),
+    transaction_date TIMESTAMP DEFAULT NOW()
+)
  `
-    
-
 console.log("database intialised");
     }
     catch (error) {

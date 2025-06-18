@@ -8,13 +8,23 @@ export const getUserInfo =async (req,res)=>{
         FROM users2
         WHERE userid=${userid}
         `
-       res.json(reponse);
+        const coinRes=await sql`
+        SELECT balance
+        FROM skillcoin2
+        WHERE userid=${userid}
+        `
+        const reponseObject={
+          username:reponse[0].username,
+          email:reponse[0].email,
+          skillcoins:coinRes[0].balance
+        };
+       res.json(reponseObject);
     }
     catch (error ){
         console.log("error occured while geting profile user details");
         res.status(500).json ({error:"unable retrive user detailss"});
     }
-}
+};
 export const getStats = async (req, res) => {
   try {
     const userid = req.user.userid;

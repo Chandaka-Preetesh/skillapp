@@ -83,6 +83,7 @@ console.log("market comporendering");
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const toastid=toast.loading('Adding your course...');
     try {
       const response = await axios.post('/api/marketplace/courses', formData);
       console.log("while submition")
@@ -97,8 +98,10 @@ console.log("market comporendering");
         duration: '',
         price: ''
       });
+      toast.success('Course added Successfully',{id:toastid});
     } catch (err) {
       console.error('Error creating course:', err);
+      toast.error('Unable to add your course',{id:toastid});
       setError('Failed to create course. Please try again.');
     }
   };

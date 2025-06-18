@@ -72,6 +72,7 @@ console.log("doubts component rendering");
 
   // Handle form submission
   const handleSubmit = async (e) => {
+    const toastid=toast.loading('Posting your Question...')
     e.preventDefault();
     try {
       const response = await axios.post('/api/doubtplace/doubts', formData);
@@ -85,9 +86,10 @@ console.log("doubts component rendering");
         question: '',
         topic: ''
       });
-      toast.success('Doubt posted successfully');
+      toast.success('Doubt posted successfully!',{id:toastid});
     } catch (err) {
       console.error('Error creating doubt:', err);
+      toast.error('Unable to post your Question!',{id:toastid});
       setError('Failed to create doubt. Please try again.');
     }
   };
@@ -115,6 +117,7 @@ console.log("doubts component rendering");
 
   // Handle reply submission
   const handleReplySubmit = async (doubtid) => {
+    const toastId = toast.loading('Posting your Reply...');
     if (!replyText.trim()) return;
 
     try {
@@ -123,14 +126,16 @@ console.log("doubts component rendering");
       });
       
       // Update replies for this doubt
+      const updatedReplies = await axios.get(`/api/doubtplace/doubts/${doubtid}/replies`);
       setReplies(prev => ({
         ...prev,
-        [doubtid]: Array.isArray(response.data) ? response.data : []
-      }));
-      
+     [doubtid]: updatedReplies.data
+}));  
       setReplyText('');
+      toast.success('Your Reply is posted successfully',{id:toastId});
     } catch (err) {
       console.error('Error posting reply:', err);
+      toast.error('Unable to post your Reply',{id:toastId});
       setError('Failed to post reply. Please try again.');
     }
   };
@@ -205,8 +210,8 @@ console.log("doubts component rendering");
                     required
                   >
                     <option value="">Select a topic</option>
-                    {topics.map(topic => (
-                      <option key={topic.topicid} value={topic.topic_name}>
+                    {topics.map((topic,index) => (
+                      <option key={index} value={topic.topic_name}>
                         {topic.topic_name}
                       </option>
                     ))}

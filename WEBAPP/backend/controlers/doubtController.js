@@ -35,6 +35,9 @@ export const createDoubt =async (req, res) => {
         doubts2.*,
         (SELECT full_name FROM users2 WHERE userid = ${userid}) as author
     `;
+     let type1="Posted a Question";
+     let activity1=`Question asked : ${question}`;
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1}) `
     res.status(201).json(doubts);
   } catch (error) {
     console.error('Error creating doubt', error);
@@ -99,36 +102,83 @@ export const addReply =async(req,res)=>{
         const  newReply= await sql `INSERT INTO doubt_replies2 (doubtid,userid,reply) VALUES (${doubtid},${userid},${reply})
         RETURNING *
         `
-        res.json(newReply[0]);
+    
+        //keeping track of activity
+         let type1="Replied to Question";
+     let activity1=`Answered to Question : ${reply} `;
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1})`
+
+      //adding coins for reply
+         await sql`
+        UPDATE skillcoin2
+        SET balance = balance+10
+        WHERE userid = ${userid}
+      `;
+          res.json(newReply[0]);
     }
     catch (error) {
           console.log("error occured while posting reply")
+          console.log(error);
         res.status(500).json({error:"failed to post reply of doubt"});
     }
 }
 
+export const updateReplyRating = async (req, res) => {
+  try {
+    const { replyid, rating } = req.body;
+    const userid = req.user.userid;
 
-export const updateReplyRating =async (req,res)=> {
-    try {
-         const { replyid, rating } = req.body;
-        const userid = req.user.userid;
+    //  Get previous rating if exists
+    const existing = await sql`
+      SELECT rating FROM reply_details2
+      WHERE userid = ${userid} AND doubt_replies_id = ${replyid}
+    `;
+    const oldRating = existing.length ? existing[0].rating : 0;
 
-        const reply_details = await sql`
-        INSERT INTO reply_details2 (doubt_replies_id, userid, rating)
-         VALUES (${replyid}, ${userid}, ${rating})
-           ON CONFLICT (doubt_replies_id, userid)
-           DO UPDATE SET rating = ${rating}
-         RETURNING *;
-`;
-
-res.json(reply_details);
-
+    //  Get the reply author
+    const reply = await sql`
+      SELECT userid FROM doubt_replies2
+      WHERE doubt_replies_id = ${replyid}
+    `;
+    if (!reply.length) {
+      return res.status(404).json({ error: "Reply not found" });
     }
-    catch (error) {
-      console.log("error occurecd  reply while updating ratings ");
-      res.status(500).json({error:"failed to reply update rating "});
-    }
+    const replyerid = reply[0].userid;
+
+    // Calculate coin diff
+    const oldPoints = 2 * oldRating;
+    const newPoints = 2 * rating;
+    const diff = newPoints - oldPoints;
+
+    // Update reply_details2 (insert or update rating)
+    const reply_details = await sql`
+      INSERT INTO reply_details2 (doubt_replies_id, userid, rating)
+      VALUES (${replyid}, ${userid}, ${rating})
+      ON CONFLICT (userid, doubt_replies_id)
+      DO UPDATE SET rating = ${rating}
+      RETURNING *
+    `;
+
+    // 5. Update skillcoin only if diff ≠ 0
+    if (diff !== 0) {
+      await sql`
+        INSERT INTO skillcoin2 (userid, balance)
+        VALUES (${replyerid}, ${diff})
+        ON CONFLICT (userid)
+        DO UPDATE SET balance = skillcoin2.balance + ${diff}, lastupdate = NOW()
+      `;
+await sql`
+    INSERT INTO doubt_transactions2  (ownerid,poster_id,amount,doubt_replies_id) VALUES (${userid},${replyerid},${diff},${replyid});
+`
 }
+
+    res.json(reply_details);
+  } catch (error) {
+    console.log("error occurred while updating reply rating:", error);
+    res.status(500).json({ error: "failed to update reply rating" });
+  }
+};
+
 
 export const toggleReplyLike =async (req,res)=>{
           try {
@@ -142,6 +192,7 @@ export const toggleReplyLike =async (req,res)=>{
            DO UPDATE SET is_liked = ${isLiked}
          RETURNING *;
 `;
+
 res.json(reply_details);
 
     }
