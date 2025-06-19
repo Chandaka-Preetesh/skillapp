@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig(({ mode }) => ({
-  base: './', // For relative paths in production
+  // CHANGED: Use absolute paths instead of relative
+  base: '/', // This ensures assets are loaded from root, not relative to current route
+  
   plugins: [react()],
+  
   server: {
     port: 5173,
     proxy: {
@@ -20,9 +23,24 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    
+    // Ensure proper asset file naming
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+      }
+    }
+  }
 }))
