@@ -91,7 +91,7 @@ export const purchaseCourses=async (req, res) => {
       SELECT * FROM skillcoin2 WHERE userid = ${buyerid}
     `;
     if(!buyer ) {
-      res.status(400).json({ error: 'Buyer id invalid ' } );
+     return res.status(400).json({ error: 'Buyer id invalid ' } );
     }
 //if coins not enough 
     let buyer_balance=Number(buyer.balance);
@@ -130,7 +130,7 @@ export const purchaseCourses=async (req, res) => {
     `
      let type1=`Purchased a Course`;
      let activity1=`Purchases Course : ${course.title}`;
-      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1})`
+      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${buyerid},${type1},${activity1})`
     res.status(201).json({ 
       message: 'Course is purchased successfully',
       newBalance: updatedUser.balance
