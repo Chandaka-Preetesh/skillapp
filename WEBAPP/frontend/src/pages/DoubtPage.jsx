@@ -118,7 +118,6 @@ console.log("doubts component rendering");
   // Handle reply submission
   const handleReplySubmit = async (doubtid) => {
     const toastId = toast.loading('Posting your Reply...');
-    if (!replyText.trim()) return;
 
     try {
       const response = await axios.post(`/api/doubtplace/doubts/${doubtid}/replies`, {
