@@ -85,7 +85,7 @@ export const googleAuthCallback = (req, res, next) => {
       // Debug log
       console.log('Redirecting with token and user data');
       const clientURL = process.env.CLIENT_URL || 'http://localhost:5173';
-      res.redirect(`${clientURL}/auth/callback?token=${token}&user=${userData}`);
+      res.redirect(`${clientURL}/login?token=${token}&user=${userData}`);
     } catch (error) {
       console.error('OAuth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication%20failed`);
