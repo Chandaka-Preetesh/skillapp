@@ -166,42 +166,43 @@ export const getEarnings = async (req, res) => {
   try {
     const userid = req.user.userid;
 
-    // Fetch course transactions in last 30 days
+    // Fetch course transactions
     const courseResults = await sql`
-      SELECT transaction_date, amount
+      SELECT transaction_date, amount, 'Marketplace' AS source
       FROM course_transactions2
       WHERE ownerid = ${userid}
       AND transaction_date >= NOW() - INTERVAL '30 days'
-      ORDER BY transaction_date DESC
     `;
 
-    // Fetch doubt transactions in last 30 days
+    // Fetch doubt transactions
     const doubtResults = await sql`
-      SELECT transaction_date, amount
+      SELECT transaction_date, amount, 'Doubt' AS source
       FROM doubt_transactions2
       WHERE ownerid = ${userid}
       AND transaction_date >= NOW() - INTERVAL '30 days'
-      ORDER BY transaction_date DESC
     `;
 
-    // Format course messages
-    const courseMessages = courseResults.map((row) => {
+    // Fetch doubt reply transactions
+    const doubtReplyResults = await sql`
+      SELECT transaction_date, amount, 'Doubt Reply' AS source
+      FROM doubt_reply_transactions2
+      WHERE userid = ${userid}
+      AND transaction_date >= NOW() - INTERVAL '30 days'
+    `;
+
+    // Merge all results
+    const combinedResults = [...courseResults, ...doubtResults, ...doubtReplyResults];
+
+    // Sort by transaction_date (latest first)
+    combinedResults.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+
+    // Format the messages
+    const formattedMessages = combinedResults.map(row => {
       const date = row.transaction_date.toISOString().split('T')[0];
-      return `💰 On ${date}, you received 🪙${parseFloat(row.amount).toFixed(2)} from Marketplace`;
+      return `💰 On ${date}, you received 🪙${parseFloat(row.amount).toFixed(2)} from ${row.source}`;
     });
 
-    // Format doubt messages
-    const doubtMessages = doubtResults.map((row) => {
-      const date = row.transaction_date.toISOString().split('T')[0];
-      return `💰 On ${date}, you received 🪙${parseFloat(row.amount).toFixed(2)} from Doubt`;
-    });
-
-    const allMessages = [...courseMessages, ...doubtMessages].sort((a, b) => {
-      // Sort descending by date (latest first)
-      return b.localeCompare(a);
-    });
-
-    res.json(allMessages);
+    res.json(formattedMessages);
   } catch (error) {
     console.log("Error while fetching earnings:", error);
     res.status(500).json({ error: "Unable to fetch earnings" });
