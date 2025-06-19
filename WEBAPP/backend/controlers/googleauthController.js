@@ -84,8 +84,8 @@ export const googleAuthCallback = (req, res, next) => {
 
       // Debug log
       console.log('Redirecting with token and user data');
-    //    console.log(`${process.env.CLIENT_URL}/login?token=${token}&user=${userData}`);
-      res.redirect(`${process.env.CLIENT_URL}/login?token=${token}&user=${userData}`);
+   const BASE_URL = import.meta.env.VITE_API_URL;
+window.location.href = `${BASE_URL}/api/googleauth/google`;
     } catch (error) {
       console.error('OAuth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication%20failed`);
