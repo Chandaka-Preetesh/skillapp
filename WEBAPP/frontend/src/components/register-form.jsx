@@ -17,7 +17,7 @@ export function RegisterForm({ className, ...props }) {
     setLoading(true)
 
     try {
-      const response = await fetch(`https://skillapp-2.onrender.com/login/api/emailauth/register`, {
+      const response = await fetch(`/login/api/emailauth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,7 +53,7 @@ export function RegisterForm({ className, ...props }) {
   }
 
   const handleGoogleSignUp = () => {
-    window.location.href = `https://skillapp-2.onrender.com/login/api/googleauth/google`;
+    window.location.href = `/login/api/googleauth/google`;
   }
 
   return (

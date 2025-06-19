@@ -61,7 +61,7 @@ export function LoginForm({
     setLoading(true)
 
     try {
-      const response = await fetch(`https://skillapp-2.onrender.com/api/emailauth/login`, {
+      const response = await fetch(`/api/emailauth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export function LoginForm({
     
     console.log('Initiating Google OAuth login');
     // Redirect to Google OAuth endpoint
-    window.location.href = `https://skillapp-2.onrender.com/login/api/googleauth/google`
+    window.location.href = `/login/api/googleauth/google`
   }
 
   return (
