@@ -105,7 +105,7 @@ export function LoginForm({
     
     console.log('Initiating Google OAuth login');
     // Redirect to Google OAuth endpoint
-    window.location.href = `/login/api/googleauth/google`
+    window.location.href = `/api/googleauth/google`
   }
 
   return (
