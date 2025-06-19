@@ -41,9 +41,14 @@ if (process.env.NODE_ENV === "development") {
 } else {
   app.use(cors());
 }
+
+// Configure Passport
 configurePassport();
-// Helmet for security
-app.use(helmet());
+
+// Helmet for security with CSP adjustments for static assets
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP to avoid blocking assets
+}));
 
 // HTTP request logging
 app.use(morgan("dev"));
@@ -76,11 +81,28 @@ if (process.env.NODE_ENV === "production") {
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 // Database connection
 idatabase();
 
-// Basic API check
+// IMPORTANT: Serve static files BEFORE API routes in production
+if (process.env.NODE_ENV === "production") {
+  // Serve static files with proper MIME types
+  app.use(express.static(path.join(__dirname, "/frontend/dist"), {
+    setHeaders: (res, filePath) => {
+      // Ensure proper MIME types
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    }
+  }));
+}
+
+// Basic API check - MOVED BEFORE OTHER ROUTES
+app.get("/", (req, res) => {
+  res.send("Hello from backend");
+});
 
 // Authentication routes
 app.use("/api/googleauth", googleauthRoutes);
@@ -114,24 +136,33 @@ app.get("/auth/logout", (req, res, next) => {
   });
 });
 
-// Serve frontend in production
+// IMPORTANT: Catch-all for frontend routes - MUST BE LAST
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "/frontend/dist")));
-
-    app.get(/(.*)/, (req, res) => {
-        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-});
-console.log("productiob ready");
+  // Handle client-side routing - catch all non-API routes
+  app.get("*", (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+      return next();
+    }
+    
+    // Send index.html for all other routes (client-side routing)
+    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+  });
+  
+  console.log("Production mode: Static files and client routing configured");
 }
 
-// Fallback for unknown routes
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+// Fallback for unknown API routes - MUST BE AFTER THE CATCH-ALL
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ message: "API route not found" });
 });
-app.get("/", (req, res) => {
-  res.send("Hello from backend");
+
+app.use("/auth/*", (req, res) => {
+  res.status(404).json({ message: "Auth route not found" });
 });
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
 });
