@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardNavBar from '../components/dashboard/DashboardNavBar';
+import Navbar from '../components/ui/Navbar';
 import axios from '../utils/axios.js';
 
 const RecentActivities = () => {
@@ -67,7 +67,7 @@ const FeatureCard = ({ title, description, icon, linkTo, color, bgColor }) => (
 const UserHomePage = () => {
   return (
     <div className="min-h-screen bg-gray-100">
-      <DashboardNavBar />
+      <Navbar />
       <div className="container mx-auto px-4 py-8 pt-20">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome Back!</h1>
         <p className="text-gray-600 mb-8">Continue your learning journey and explore new opportunities.</p>

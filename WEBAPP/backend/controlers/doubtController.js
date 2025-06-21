@@ -1,21 +1,39 @@
 import { sql} from "../config/idb.js";
-
+import { generateGeminiReply } from "../config/ai.js";
+import { generateOpenAIReply } from "../config/ai.js";
 export const getDoubts = async (req, res) => {
   try {
     const { topic } = req.query;
-    const userid = req.user.userid; // The user ID from the request
-    
-    const doubts = topic 
+
+    const doubts = topic
       ? await sql`
-          SELECT * 
-          FROM doubts2 
-          WHERE topic = ${topic}
+          SELECT 
+            d.doubtid,
+            d.title,
+            d.question,
+            d.topic,
+            d.createdat,
+            d.userid,
+            u.full_name AS author
+          FROM doubts2 d
+          JOIN users2 u ON d.userid = u.userid
+          WHERE d.topic = ${topic}
+          ORDER BY d.createdat DESC
         `
       : await sql`
-          SELECT *
-          FROM doubts2 
+          SELECT 
+            d.doubtid,
+            d.title,
+            d.question,
+            d.topic,
+            d.createdat,
+            d.userid,
+            u.full_name AS author
+          FROM doubts2 d
+          JOIN users2 u ON d.userid = u.userid
+          ORDER BY d.createdat DESC
         `;
-    
+
     res.json(doubts);
   } catch (error) {
     console.error('Error fetching doubts', error);
@@ -23,27 +41,73 @@ export const getDoubts = async (req, res) => {
   }
 };
 
-export const createDoubt =async (req, res) => {
+
+
+export const createDoubt = async (req, res) => {
   try {
-    const { title,question,topic} = req.body;
+    const { title, question, topic } = req.body;
     const userid = req.user.userid;
 
-    const [doubts] = await sql`
-      INSERT INTO doubts2 (title, question,userid, topic)
+    // 1. Insert doubt
+    const [doubt] = await sql`
+      INSERT INTO doubts2 (title, question, userid, topic)
       VALUES (${title}, ${question}, ${userid}, ${topic})
       RETURNING 
-        doubts2.*,
-        (SELECT full_name FROM users2 WHERE userid = ${userid}) as author
+        doubts2.*, 
+        (SELECT full_name FROM users2 WHERE userid = ${userid}) AS author
     `;
-     let type1="Posted a Question";
-     let activity1=`Question asked : ${question}`;
-      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${userid},${type1},${activity1}) `
-    res.status(201).json(doubts);
+
+    // 2. Log activity
+    const type1 = "Posted a Question";
+    const activity1 = `Question asked : ${question}`;
+    await sql`
+      INSERT INTO recent_activity2 (userid, type, activity)
+      VALUES (${userid}, ${type1}, ${activity1})
+    `;
+
+    // 3. Respond early to frontend
+    res.status(201).json(doubt);
+
+    // 4. Background AI reply generation (non-blocking)
+    setImmediate(async () => {
+      const aiReplies = [];
+
+      try {
+        const geminiReply = await generateGeminiReply(question);
+        if (geminiReply) {
+          aiReplies.push({ reply: geminiReply, model: "Gemini" });
+        }
+      } catch (err) {
+        console.warn("Gemini AI error:", err.message);
+      }
+
+      try {
+        const openaiReply = await generateOpenAIReply(question);
+        if (openaiReply) {
+          aiReplies.push({ reply: openaiReply, model: "OpenAI" });
+        }
+      } catch (err) {
+        console.warn("OpenAI AI error:", err.message);
+      }
+
+      // 5. Save AI replies (if any)
+      for (const { reply, model } of aiReplies) {
+        try {
+          await sql`
+            INSERT INTO ai_doubt_replies2 (doubtid, reply, model_name)
+            VALUES (${doubt.doubtid}, ${reply}, ${model})
+          `;
+        } catch (insertErr) {
+          console.error("Error saving AI reply:", insertErr.message);
+        }
+      }
+    });
+
   } catch (error) {
-    console.error('Error creating doubt', error);
-    res.status(500).json({ error: 'Failed to create doubt ' });
+    console.error("Error creating doubt:", error);
+    res.status(500).json({ error: "Failed to create doubt" });
   }
-}
+};
 
 export const getUserDoubts=async (req, res) => {
   try {
@@ -64,35 +128,51 @@ export const getUserDoubts=async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user doubts' });
   }
 };
-export const getReplies = async(req, res) => {     
-    try {          
-        const {doubtid} = req.params;          
-        const userid = req.user.userid;         
-        
-        const replies = await sql`      
-            SELECT      
-                d.doubt_replies_id,     
-                d.userid AS reply_userid,     
-                d.reply,     
-                d.createdat,     
-                u.full_name AS author,     
-                COALESCE(r.rating, 0) AS rating,     
-                COALESCE(r.is_liked, false) AS is_liked   
-            FROM doubt_replies2 d   
-            JOIN users2 u ON d.userid = u.userid   
-            LEFT JOIN reply_details2 r      
-                ON r.doubt_replies_id = d.doubt_replies_id AND r.userid = ${userid}   
-            WHERE d.doubtid = ${doubtid}   
-            ORDER BY d.createdat ASC; 
-        `          
-        
-        res.json(replies);     
-    }     
-    catch (error) {         
-        console.log("error occured while fetching replies", error);         
-        res.status(500).json({error:"failed to fetch replies of doubt"});     
-    }  
-}
+
+
+export const getReplies = async (req, res) => {     
+  try {          
+    const { doubtid } = req.params;          
+    const userid = req.user.userid;         
+
+    // Fetch AI reply for this doubt
+    const [aiReply] = await sql`
+      SELECT reply, model_name, createdAt
+      FROM ai_doubt_replies2
+      WHERE doubtid = ${doubtid}
+    `;
+
+    // Fetch all human replies for this doubt
+    const userReplies = await sql`      
+      SELECT      
+        d.doubt_replies_id,     
+        d.userid AS reply_userid,     
+        d.reply,     
+        d.createdat,     
+        u.full_name AS author,     
+        COALESCE(r.rating, 0) AS rating,     
+        COALESCE(r.is_liked, false) AS is_liked   
+      FROM doubt_replies2 d   
+      JOIN users2 u ON d.userid = u.userid   
+      LEFT JOIN reply_details2 r      
+        ON r.doubt_replies_id = d.doubt_replies_id AND r.userid = ${userid}   
+      WHERE d.doubtid = ${doubtid}   
+      ORDER BY d.createdat ASC;
+    `;          
+
+    // Combine and send both
+    res.json({
+      ai_reply: aiReply || null,
+      user_replies: userReplies
+    });     
+  }     
+  catch (error) {         
+    console.log("error occurred while fetching replies", error);         
+    res.status(500).json({ error: "failed to fetch replies of doubt" });     
+  }  
+};
+
+
 
 export const addReply = async (req, res) => {
   try {

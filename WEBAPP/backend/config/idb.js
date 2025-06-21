@@ -120,6 +120,15 @@ await sql `CREATE TABLE IF NOT EXISTS course_post_details2 (
 );
 
  `
+ await sql`
+ CREATE TABLE IF NOT EXISTS ai_doubt_replies2 (
+  ai_reply_id SERIAL PRIMARY KEY,
+  doubtid INTEGER REFERENCES doubts2(doubtid) ON DELETE CASCADE,
+  reply TEXT NOT NULL,
+  model_name VARCHAR(40) DEFAULT 'Gemini',
+  createdAt TIMESTAMP DEFAULT NOW()
+);
+`
 console.log("database intialised");
     }
     catch (error) {
