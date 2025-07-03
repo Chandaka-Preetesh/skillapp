@@ -32,11 +32,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
         }
 
         // Verify token with backend
-const response = await axios.get('/api/auth/verify', {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
+        const response = await axios.get('/api/auth/verify');
         const { user: verifiedUser, token: newToken } = response.data;
 
         // Update token and user data
@@ -49,7 +45,7 @@ const response = await axios.get('/api/auth/verify', {
           window.history.replaceState({}, document.title, location.pathname);
         }
       } catch (error) {
-        console.error('Auth check failed:');
+        console.error('Auth check failed:', error);
         // Clear invalid data
         localStorage.removeItem('token');
         localStorage.removeItem('user');

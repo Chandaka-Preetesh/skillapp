@@ -1,6 +1,5 @@
 import { sql} from "../config/idb.js";
 import { generateGeminiReply } from "../config/ai.js";
-import { generateOpenAIReply } from "../config/ai.js";
 export const getDoubts = async (req, res) => {
   try {
     const { topic } = req.query;
@@ -79,15 +78,6 @@ export const createDoubt = async (req, res) => {
         }
       } catch (err) {
         console.warn("Gemini AI error:", err.message);
-      }
-
-      try {
-        const openaiReply = await generateOpenAIReply(question);
-        if (openaiReply) {
-          aiReplies.push({ reply: openaiReply, model: "OpenAI" });
-        }
-      } catch (err) {
-        console.warn("OpenAI AI error:", err.message);
       }
 
       // 5. Save AI replies (if any)
@@ -173,7 +163,6 @@ export const getReplies = async (req, res) => {
 };
 
 
-
 export const addReply = async (req, res) => {
   try {
     const { doubtid } = req.params;
@@ -184,41 +173,38 @@ export const addReply = async (req, res) => {
       return res.status(400).json({ error: "Reply cannot be empty" });
     }
 
-    // Insert reply
+    const preview = reply.length > 60 ? reply.slice(0, 57) + "..." : reply;
+    const type1 = "Replied to Question";
+    const activity1 = `Answered to Question: ${preview}`;
+
+    // Step 1: insert reply (and capture ID)
     const [newReply] = await sql`
       INSERT INTO doubt_replies2 (doubtid, userid, reply)
       VALUES (${doubtid}, ${userid}, ${reply})
       RETURNING *
     `;
 
-    // Insert into recent activity
-    const preview = reply.length > 60 ? reply.slice(0, 57) + "..." : reply;
-    const type1 = "Replied to Question";
-    const activity1 = `Answered to Question: ${preview}`;
-    await sql`
-      INSERT INTO recent_activity2 (userid, type, activity)
-      VALUES (${userid}, ${type1}, ${activity1})
-    `;
-
-    // Ensure skillcoin row exists
-    await sql`
-      INSERT INTO skillcoin2 (userid, balance)
-      VALUES (${userid}, 0)
-      ON CONFLICT (userid) DO NOTHING
-    `;
-
-    // Update coin balance
-    await sql`
-      UPDATE skillcoin2
-      SET balance = balance + 10
-      WHERE userid = ${userid}
-    `;
-
-    // Log transaction
-    await sql`
-      INSERT INTO doubt_reply_transactions2 (doubt_replies_id, userid, amount)
-      VALUES (${newReply.doubt_replies_id}, ${userid}, 10)
-    `;
+    // Step 2: all coin + activity updates inside a transaction
+    await sql.transaction(() => [
+      sql`
+        INSERT INTO recent_activity2 (userid, type, activity)
+        VALUES (${userid}, ${type1}, ${activity1})
+      `,
+      sql`
+        INSERT INTO skillcoin2 (userid, balance)
+        VALUES (${userid}, 0)
+        ON CONFLICT (userid) DO NOTHING
+      `,
+      sql`
+        UPDATE skillcoin2
+        SET balance = balance + 10
+        WHERE userid = ${userid}
+      `,
+      sql`
+        INSERT INTO doubt_reply_transactions2 (doubt_replies_id, userid, amount)
+        VALUES (${newReply.doubt_replies_id}, ${userid}, 10)
+      `
+    ]);
 
     res.json(newReply);
   } catch (error) {
@@ -228,19 +214,20 @@ export const addReply = async (req, res) => {
 };
 
 
+
 export const updateReplyRating = async (req, res) => {
   try {
     const { replyid, rating } = req.body;
     const userid = req.user.userid;
 
-    //  Get previous rating if exists
+    // Step 1: Get old rating (if any)
     const existing = await sql`
       SELECT rating FROM reply_details2
       WHERE userid = ${userid} AND doubt_replies_id = ${replyid}
     `;
     const oldRating = existing.length ? existing[0].rating : 0;
 
-    //  Get the reply author
+    // Step 2: Get reply owner
     const reply = await sql`
       SELECT userid FROM doubt_replies2
       WHERE doubt_replies_id = ${replyid}
@@ -250,13 +237,13 @@ export const updateReplyRating = async (req, res) => {
     }
     const reply_owner = reply[0].userid;
 
-    // Calculate coin diff
+    // Step 3: Calculate point difference
     const oldPoints = 2 * oldRating;
     const newPoints = 2 * rating;
     const diff = newPoints - oldPoints;
 
-    // Update reply_details2 (insert or update rating)
-    const reply_details = await sql`
+    // Step 4: Update reply_details2 and capture updated row (outside transaction)
+    const [updatedRating] = await sql`
       INSERT INTO reply_details2 (doubt_replies_id, userid, rating)
       VALUES (${replyid}, ${userid}, ${rating})
       ON CONFLICT (userid, doubt_replies_id)
@@ -264,25 +251,29 @@ export const updateReplyRating = async (req, res) => {
       RETURNING *
     `;
 
-    // 5. Update skillcoin only if diff ≠ 0
+    // Step 5: If coin update is needed, run it in a transaction
     if (diff !== 0) {
-      await sql`
-        INSERT INTO skillcoin2 (userid, balance)
-        VALUES (${reply_owner}, ${diff})
-        ON CONFLICT (userid)
-        DO UPDATE SET balance = skillcoin2.balance + ${diff}, lastupdate = NOW()
-      `;
-await sql`
-    INSERT INTO doubt_transactions2  (ownerid,poster_id,amount,doubt_replies_id) VALUES (${reply_owner},${userid},${diff},${replyid});
-`
-}
+      await sql.transaction(() => [
+        sql`
+          INSERT INTO skillcoin2 (userid, balance)
+          VALUES (${reply_owner}, ${diff})
+          ON CONFLICT (userid)
+          DO UPDATE SET balance = skillcoin2.balance + ${diff}, lastupdate = NOW()
+        `,
+        sql`
+          INSERT INTO doubt_transactions2 (ownerid, poster_id, amount, doubt_replies_id)
+          VALUES (${reply_owner}, ${userid}, ${diff}, ${replyid})
+        `
+      ]);
+    }
 
-    res.json(reply_details);
+    res.json(updatedRating);
   } catch (error) {
-    console.log("error occurred while updating reply rating:", error);
-    res.status(500).json({ error: "failed to update reply rating" });
+    console.error("error occurred while updating reply rating:", error);
+    res.status(500).json({ error: "Failed to update reply rating" });
   }
 };
+
 
 
 export const toggleReplyLike =async (req,res)=>{
