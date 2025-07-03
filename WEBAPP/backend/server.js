@@ -11,36 +11,42 @@ import googleauthRoutes from "./routes/googleauthRoutes.js";
 import emailauthRoutes from "./routes/emailauthRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import marketplaceRoutes from "./routes/marketplaceRoutes.js";
-import doubtPlaceRoutes from "./routes/doubplaceRoutes.js";
+import doubtPlaceRoutes from "./routes/doubtplaceRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 
 import { idatabase } from "./config/idb.js";
 import { configurePassport } from "./controlers/googleauthController.js";
 import { verifyAuth } from "./controlers/verifyAuth.js";
 
-// Resolve __dirname in ES module
-const __dirname = path.resolve();
-
 // Load environment variables
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+
+// port and server initalise
+
+const PORT = process.env.PORT || 3000;
 const app = express();
+
+
+// Resolve __dirname in ES module
+const __dirname = path.resolve();
+
 
 // JSON request parsing
 app.use(express.json());
 
 // CORS settings
 if (process.env.NODE_ENV === "development") {
-  app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  }));
+    app.use(
+        cors({
+            origin: process.env.CLIENT_URL,
+            credentials: true,
+        })
+    )
 } else {
-  app.use(cors());
+    app.use(cors());
 }
+
 configurePassport();
 // Helmet for security
 app.use(helmet());
@@ -67,7 +73,7 @@ if (process.env.NODE_ENV === "production") {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000  //7 days
     }
   }));
 }
@@ -101,18 +107,6 @@ app.use("/api/profileplace", profileRoutes);
 // Token verification
 app.get("/api/auth/verify", verifyAuth);
 
-// Get user session data
-app.get("/auth/user", (req, res) => {
-  res.json(req.user || null);
-});
-
-// Logout handler
-app.get("/auth/logout", (req, res, next) => {
-  req.logout(function (err) {
-    if (err) return next(err);
-    res.redirect(process.env.CLIENT_URL || "http://localhost:5173");
-  });
-});
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {
@@ -121,16 +115,14 @@ if (process.env.NODE_ENV === "production") {
     app.get(/(.*)/, (req, res) => {
         res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 });
-console.log("productiob ready");
+console.log("production ready");
 }
 
 // Fallback for unknown routes
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
-app.get("/", (req, res) => {
-  res.send("Hello from backend");
-});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

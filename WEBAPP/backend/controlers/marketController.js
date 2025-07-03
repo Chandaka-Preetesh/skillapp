@@ -55,91 +55,71 @@ export const createCourse=async (req, res) => {
   }
 }
 
-export const purchaseCourses=async (req, res) => {
-  try {
-    const { courseid } = req.params;
-    const buyerid = req.user.userid;
+export const purchaseCourses = async (req, res) => {
+  const { courseid } = req.params;
+  const buyerid = req.user.userid;
 
-    // Check if course exists
+  try {
     const [course] = await sql`
-      SELECT *
-      FROM courses2
-      WHERE courseid = ${courseid}
+      SELECT * FROM courses2 WHERE courseid = ${courseid}
     `;
-    
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-    const sellerid=course.userid;
-    // Check if user is trying to buy their own course
+    if (!course) throw new Error('Course not found');
+
+    const sellerid = course.userid;
     if (sellerid === buyerid) {
       return res.status(400).json({ error: 'You cannot purchase your own course' });
     }
 
-    // Check if already purchased
     const [existingPurchase] = await sql`
       SELECT * FROM course_purchases2
       WHERE courseid = ${courseid} AND userid = ${buyerid}
     `;
-
     if (existingPurchase) {
       return res.status(400).json({ error: 'Course already purchased' });
     }
 
-    // Get buyer's balance
     const [buyer] = await sql`
       SELECT * FROM skillcoin2 WHERE userid = ${buyerid}
     `;
-    if(!buyer ) {
-     return res.status(400).json({ error: 'Buyer id invalid ' } );
+    if (!buyer) {
+      return res.status(400).json({ error: 'Buyer not found' });
     }
-//if coins not enough 
-    let buyer_balance=Number(buyer.balance);
-    let course_price=Number(course.price)
-    if ( buyer_balance<course_price  ) {
+
+    const buyer_balance = Number(buyer.balance);
+    const course_price = Number(course.price);
+    if (buyer_balance < course_price) {
       return res.status(400).json({ error: 'Insufficient SkillCoins balance' });
     }
 
-    // Begin transaction
-      // Deduct coins from buyer
-      await sql`
-        UPDATE skillcoin2
-        SET balance = balance - ${course.price}
-        WHERE userid = ${buyerid}
-      `;
+    const selleramount = course_price * 0.85;
+    const type1 = 'Purchased a Course';
+    const activity1 = `Purchased Course: ${course.title}`;
 
-      // Create purchase record
-      await sql`
-        INSERT INTO course_purchases2 (courseid, userid)
-        VALUES (${courseid}, ${buyerid})
-      `;
+    const result = await sql.transaction(() => [
+      sql`UPDATE skillcoin2 SET balance = balance - ${course_price} WHERE userid = ${buyerid}`,
+      sql`INSERT INTO course_purchases2 (courseid, userid) VALUES (${courseid}, ${buyerid})`,
+      sql`UPDATE skillcoin2 SET balance = balance + ${selleramount} WHERE userid = ${sellerid}`,
+      sql`INSERT INTO course_transactions2 (courseid, buyerid, ownerid, amount)
+          VALUES (${courseid}, ${buyerid}, ${sellerid}, ${selleramount})`,
+      sql`INSERT INTO recent_activity2 (userid, type, activity)
+          VALUES (${buyerid}, ${type1}, ${activity1})`
+    ]);
 
-    // Get updated balance
     const [updatedUser] = await sql`
       SELECT * FROM skillcoin2 WHERE userid = ${buyerid}
     `;
-    let selleramount=Number(course.price)*0.85;
-    await sql`
-  INSERT INTO course_transactions2 (courseid, buyerid, ownerid, amount)
-  VALUES (${courseid}, ${buyerid}, ${sellerid}, ${selleramount})
-`
-    await sql`
-       UPDATE skillcoin2
-      SET balance = balance + ${selleramount}
-      WHERE userid = ${sellerid}
-    `
-     let type1=`Purchased a Course`;
-     let activity1=`Purchases Course : ${course.title}`;
-      await sql`INSERT INTO recent_activity2 (userid,type,activity) VALUES (${buyerid},${type1},${activity1})`
-    res.status(201).json({ 
-      message: 'Course is purchased successfully',
-      newBalance: updatedUser.balance
+
+    res.status(201).json({
+      message: 'Course purchased successfully',
+      newBalance: updatedUser.balance,
     });
   } catch (error) {
-    console.error('Error purchasing course:', error);
-    res.status(500).json({ error: 'Failed to purchase course' });
+    console.error('Error purchasing course:', error.message);
+    res.status(400).json({ error: error.message || 'Failed to purchase course' });
   }
 };
+
+
 
 
 export const getPurchasedCourses = async (req, res) => {
