@@ -11,7 +11,7 @@ const PageEnding=()=>{
       }
     return (
 <>
-   <section className="bg-gray-50 text-gray-900 py-20">
+   <section className="bg-blue-100 text-gray-900 py-20">
         <div className="max-w-4xl mx-auto text-center px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -27,7 +27,7 @@ const PageEnding=()=>{
             </p>
             <Button
               onClick={goToLoginPage}
-              className="bg-black text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition-all"
+              className="bg-blue-500 text-white px-8 py-4 rounded-xl hover:bg-gray-800 transition-all"
             >
               Get Started Now
             </Button>

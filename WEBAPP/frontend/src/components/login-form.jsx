@@ -3,11 +3,8 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 
 
-
-export function LoginForm({
-  className,
-  ...props
-}) {
+//google login 
+export function LoginForm() {
   //states to hangle form
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -28,7 +25,9 @@ export function LoginForm({
     // Check for successful OAuth login
     const token = params.get('token')
     const userData = params.get('user')
-    
+    console.log(token);
+    console.log(userData);
+    console.log("log from  efect");
     if (token && userData) {
       try {
         console.log('Received token and user data from OAuth');
@@ -38,22 +37,22 @@ export function LoginForm({
         // Store authentication data
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
-        
-        // Clear URL parameters
-        window.history.replaceState({}, document.title, window.location.pathname)
-        
-        // Get the redirect URL from localStorage or default to user home
-        const redirectUrl = localStorage.getItem('redirectUrl') || '/user-home';
-        localStorage.removeItem('redirectUrl'); // Clean up
-        
+       
+        // Go to userhome
+        const redirectUrl = '/user-home';
+           
         // Force a page reload to ensure all components update
-        window.location.href = redirectUrl;
+       navigate(redirectUrl);
+    console.log(redirectUrl);
       } catch (err) {
         console.error('Failed to parse user data:', err)
         setError('Authentication failed. Please try again.')
       }
     }
   }, [location])
+
+  //email submit 
+  // recieves token and user both are set in localstore
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -82,12 +81,11 @@ export function LoginForm({
       // Store user data
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Get the redirect URL from location state or localStorage
-      const redirectUrl = location.state?.from || localStorage.getItem('redirectUrl') || '/user-home';
-      localStorage.removeItem('redirectUrl'); // Clean up
+      // Go to userhome on succesfull login
+      const redirectUrl = '/user-home';
       
       // Force a page reload to ensure all components update
-      window.location.href = redirectUrl;
+      navigate(redirectUrl);
     } catch (err) {
       setError(err.message || 'Invalid email or password');
       console.error('Login error:', err)

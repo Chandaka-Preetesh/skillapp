@@ -307,7 +307,6 @@ const AIReply = ({ aiReply }) => (
     {doubt.author?.trim().charAt(0).toUpperCase() || 'U'}
   </span>
 </div>
-{console.log(doubt.author+"from frontend")}
                       <span className="text-sm text-gray-600">{doubt.author}</span>
                     </div>
                     <div className="flex gap-2">

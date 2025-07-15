@@ -12,7 +12,12 @@ const RecentActivities = () => {
     const fetchAndUpdateActivities = async () => {
       try {
         console.log("calling route to fetch activity");
-        const response = await axios.get("/api/me/getRecentActivity");
+        const response = await axios.get("/api/me/getRecentActivity", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
+});
+
         setActivities(response.data.recentActivity);
         console.log("got activities");
       } catch (error) {

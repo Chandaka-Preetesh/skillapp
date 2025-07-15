@@ -1,7 +1,10 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import jwt from 'jsonwebtoken';
 import { linkGoogleAccount } from "../config/loginAndRegisterQueries.js";
+
+
+import { createAccessToken } from './tokenController.js';
+import { createRefreshToken } from './tokenController.js';
 
 // Configure passport strategies
 export const configurePassport = () => {
@@ -57,22 +60,22 @@ export const googleAuthCallback = (req, res, next) => {
     try {
       if (!req.user) {
         console.error('OAuth callback error: No user data in request');
-        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=Authentication%20failed%20-%20No%20user%20data`);
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication%20failed%20-%20No%20user%20data`);
       }
 
       console.log('OAuth user data:', req.user); 
 
-      // Create JWT token
-      const token = jwt.sign(
-        { 
-          userid: req.user.userid, 
-          email: req.user.email,
-          googleId: req.user.google_id,
-          isGoogleAuth: true
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '24h' }
-      );
+       // Create tokens
+        const token = createAccessToken(req.user);//15m
+        const refreshToken = createRefreshToken(req.user);//7d
+    
+        // Set refresh token in HTTP-only cookie
+       res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
 
       // Encode user data
       const userData = encodeURIComponent(JSON.stringify({
@@ -84,7 +87,7 @@ export const googleAuthCallback = (req, res, next) => {
 
       // Debug log
       console.log('Redirecting with token and user data');
-      const clientURL = process.env.CLIENT_URL || 'http://localhost:5173';
+      const clientURL = process.env.CLIENT_URL;
       res.redirect(`${clientURL}/login?token=${token}&user=${userData}`);
     } catch (error) {
       console.error('OAuth callback error:', error);

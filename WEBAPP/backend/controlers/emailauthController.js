@@ -137,7 +137,7 @@ export const loginUser= async (req, res) => {
     const refreshToken = createRefreshToken(user);//7d
 
     // Set refresh token in HTTP-only cookie
-    res.cookie('refreshToken', refreshToken, {
+   res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

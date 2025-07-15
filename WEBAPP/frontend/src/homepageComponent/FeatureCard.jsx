@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 const FeatureCard = () => {
   return (
     <>
-      <section className="bg-white py-10"> {/* reduced vertical padding */}
+      <section className="bg-blue-50 py-10"> {/* reduced vertical padding */}
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent } from './sheet.jsx';
 import toast from 'react-hot-toast';
+import axios from "../../utils/axios.js";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -19,7 +20,11 @@ export default function Navbar() {
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {    await axios.post('/api/auth/logout', {}, { withCredentials: true }); //  call backend to clear cookie
+  } catch (err) {
+    console.error("Logout API failed", err);
+  }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -133,9 +138,12 @@ export default function Navbar() {
                     <Button variant="outline" onClick={() => navigate('/login')}>
                       Login
                     </Button>
-                    <Button onClick={() => navigate('/register')}>
-                      Sign Up
-                    </Button>
+                   <Button
+                  onClick={() => navigate('/register')}
+                     className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                       Sign Up
+                </Button>
                   </div>
                 )}
               </div>

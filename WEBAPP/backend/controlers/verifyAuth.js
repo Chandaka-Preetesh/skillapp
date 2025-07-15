@@ -5,45 +5,53 @@ import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-// Get the directory path of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-//To get environamental varibiles from .env i
 dotenv.config({ path: join(__dirname, '../.env') });
 
-export const verifyAuth= async (req, res) => {
+export const verifyAuth = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
+    const accessToken = req.headers.authorization?.split(' ')[1];
     let decoded;
+
     try {
-      // Use ACCESS_TOKEN_SECRET to verify current token
-      decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    } catch (e) {
-        return res.status(401).json({ error: 'Invalid token' });
+      decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+    } catch (err) {
+      // If access token expired, try refresh token
+      if (err.name === 'TokenExpiredError') {
+        const refreshToken = req.cookies.refreshToken;
+
+        if (!refreshToken) {
+          return res.status(401).json({ error: 'Refresh token missing' });
+        }
+
+        try {
+          const refreshDecoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+          decoded = refreshDecoded; // overwrite decoded with refresh info
+        } catch {
+          return res.status(401).json({ error: 'Invalid refresh token' });
+        }
+      } else {
+        return res.status(401).json({ error: 'Invalid access token' });
+      }
     }
 
-    // Get user data from database
     const user = await getUserById(decoded.userid);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Return user data with token refresh
-    const newToken = jwt.sign(
-      { 
-        userid: user.userid, 
+    const newAccessToken = jwt.sign(
+      {
+        userid: user.userid,
         email: user.email,
         google_id: user.googleid,
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '15m' }
     );
-    //a json responcse 
+
     res.json({
       user: {
         userid: user.userid,
@@ -51,11 +59,10 @@ export const verifyAuth= async (req, res) => {
         full_name: user.full_name,
         google_id: user.googleid
       },
-      token: newToken
+      token: newAccessToken
     });
   } catch (error) {
     console.error('Token verification error:', error);
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Token verification failed' });
   }
 };
-

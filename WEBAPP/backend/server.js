@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 import session from "express-session";
 import passport from "passport";
 import path from "path";
+import cookieParser from "cookie-parser";
+
+
 
 import googleauthRoutes from "./routes/googleauthRoutes.js";
 import emailauthRoutes from "./routes/emailauthRoutes.js";
@@ -17,6 +20,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import { idatabase } from "./config/idb.js";
 import { configurePassport } from "./controlers/googleauthController.js";
 import { verifyAuth } from "./controlers/verifyAuth.js";
+import { logoutUser } from "./controlers/userController.js";
 
 // Load environment variables
 dotenv.config();
@@ -35,17 +39,12 @@ const __dirname = path.resolve();
 // JSON request parsing
 app.use(express.json());
 
-// CORS settings
-if (process.env.NODE_ENV === "development") {
-    app.use(
-        cors({
-            origin: process.env.CLIENT_URL,
-            credentials: true,
-        })
-    )
-} else {
-    app.use(cors());
-}
+//cors enables communication 
+ app.use(cors());
+
+ //cookie related
+ app.use(cookieParser());
+
 
 configurePassport();
 // Helmet for security
@@ -67,16 +66,7 @@ if (process.env.NODE_ENV === "production") {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
   }));
-} else {
-  app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000  //7 days
-    }
-  }));
-}
+} 
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -85,8 +75,6 @@ app.use(passport.session());
 
 // Database connection
 idatabase();
-
-// Basic API check
 
 // Authentication routes
 app.use("/api/googleauth", googleauthRoutes);
@@ -107,6 +95,7 @@ app.use("/api/profileplace", profileRoutes);
 // Token verification
 app.get("/api/auth/verify", verifyAuth);
 
+app.post("/api/auth/logout",logoutUser);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {
@@ -118,10 +107,6 @@ if (process.env.NODE_ENV === "production") {
 console.log("production ready");
 }
 
-// Fallback for unknown routes
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
 
 // Start the server
 app.listen(PORT, () => {

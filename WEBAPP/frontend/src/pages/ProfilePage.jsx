@@ -26,7 +26,10 @@ const ProfilePage = () => {
           axios.get('/api/profileplace/recent-activity'),
           axios.get('/api/profileplace/my-earnings'),
         ]);
-
+        console.log("profile page");
+        console.log(earningsRes.data);
+        console.log(userRes.data);
+        console.log(statsRes);
         setUserInfo(userRes.data);
         setStats(statsRes.data);
         setActivityHeatmap(
@@ -47,7 +50,7 @@ const ProfilePage = () => {
     };
 
     fetchProfileData();
-  }, [navigate]);
+  }, []);
 
 
   return (
@@ -83,7 +86,7 @@ const ProfilePage = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">📘</span>
-                    <h3 className="font-semibold text-blue-800">Courses</h3>
+                    <h3 className="font-semibold text-blue-800">Posted Courses</h3>
                   </div>
                   <div className="space-y-2 text-sm text-blue-700">
                     <div className="flex justify-between">
@@ -127,7 +130,7 @@ const ProfilePage = () => {
                 <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 rounded-xl border border-yellow-200">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🛒</span>
-                    <h3 className="font-semibold text-yellow-800">Marketplace</h3>
+                    <h3 className="font-semibold text-yellow-800">Marketplace Earnings</h3>
                   </div>
                   <div className="space-y-2 text-sm text-yellow-700">
                     <div className="flex justify-between">

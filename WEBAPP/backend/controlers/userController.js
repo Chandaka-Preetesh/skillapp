@@ -34,6 +34,8 @@ export const getUserDetailsFromReq = async (req) => {
 };
 
 
+
+
 //Route function to return recent user activity
 export const recentActivity = async (req, res) => {
   try {
@@ -44,4 +46,17 @@ export const recentActivity = async (req, res) => {
     console.error("Error while fetching recent activity:", error.message);
     res.status(401).json({ error: error.message });
   }
+};
+
+//logout clear refresh token
+
+export const logoutUser = (req, res) => {
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+    path: '/', 
+  });
+
+  res.json({ message: 'Logged out' });
 };

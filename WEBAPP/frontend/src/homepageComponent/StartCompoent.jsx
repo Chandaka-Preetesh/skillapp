@@ -19,11 +19,11 @@ const StartComponent = () => {
 
   return (
     <>
-      <div className=" bg-white text-black">
+      <div className="bg-white text-black">
         <Navbar />
 
-        {/* Hero Section */}
-        <div className="relative overflow-hidden py-20 sm:py-24 bg-gray-50"> {/* reduced from py-32 */}
+        {/* Hero Section with light blue tint */}
+        <div className="relative overflow-hidden py-20 sm:py-24 bg-blue-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               className="text-center max-w-4xl mx-auto"
@@ -44,17 +44,9 @@ const StartComponent = () => {
               <div className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-6">
                 <Button
                   onClick={goToLoginPage}
-                  className="px-8 py-4 text-lg font-semibold bg-black hover:bg-gray-800 text-white rounded-xl transform hover:scale-105 transition-all shadow"
+                  className="px-8 py-4 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transform hover:scale-105 transition-all shadow"
                 >
                   Get Started Now
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/explore")}
-                  className="px-8 py-4 text-lg font-semibold border-2 border-black text-black hover:bg-gray-100 rounded-xl transform hover:scale-105 transition-all"
-                >
-                  Learn More
                 </Button>
               </div>
             </motion.div>

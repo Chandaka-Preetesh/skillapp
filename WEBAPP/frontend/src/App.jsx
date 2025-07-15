@@ -37,7 +37,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        {
           <Route 
           path="/marketplace" 
           element={
@@ -46,7 +45,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-       }
           <Route 
           path="/doubt" 
           element={

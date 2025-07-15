@@ -25,18 +25,17 @@ export const getUserInfo =async (req,res)=>{
         res.status(500).json ({error:"unable retrive user detailss"});
     }
 };
+
 export const getStats = async (req, res) => {
   try {
     const userid = req.user.userid;
 
-    // Lifetime total courses created
     const totalCoursesResult = await sql`
       SELECT COUNT(courseid) AS "totalCourses"
       FROM courses2
       WHERE userid = ${userid}
     `;
 
-    // Courses created in the last 30 days
     const monthlyCoursesResult = await sql`
       SELECT COUNT(courseid) AS "monthlyCourses"
       FROM courses2
@@ -44,7 +43,6 @@ export const getStats = async (req, res) => {
       AND createdAt >= NOW() - INTERVAL '30 days'
     `;
 
-    // Average rating on all courses (non-zero)
     const avgCourseRatingResult = await sql`
       SELECT AVG(rating) AS "avgCourseRating"
       FROM course_post_details2
@@ -53,14 +51,12 @@ export const getStats = async (req, res) => {
       ) AND rating != 0
     `;
 
-    // Lifetime total doubt replies
     const totalDoubtsResult = await sql`
       SELECT COUNT(doubt_replies_id) AS "totalDoubts"
       FROM doubt_replies2
       WHERE userid = ${userid}
     `;
 
-    // Doubt replies in the last 30 days
     const monthlyDoubtsResult = await sql`
       SELECT COUNT(doubt_replies_id) AS "monthlyDoubts"
       FROM doubt_replies2
@@ -68,7 +64,6 @@ export const getStats = async (req, res) => {
       AND createdAt >= NOW() - INTERVAL '30 days'
     `;
 
-    // Average rating on doubt replies
     const avgDoubtRatingResult = await sql`
       SELECT AVG(rating) AS "avgDoubtRating"
       FROM reply_details2
@@ -76,50 +71,74 @@ export const getStats = async (req, res) => {
         SELECT doubt_replies_id FROM doubt_replies2 WHERE userid = ${userid}
       ) AND rating != 0
     `;
-    // Lifetime earnings from Marketplace
-const totalMarketplaceEarnings = await sql`
-  SELECT COALESCE(SUM(amount), 0) AS "totalMarketplace"
-  FROM course_transactions2
-  WHERE ownerid = ${userid}
-`;
 
-// Earnings from Marketplace in the last 30 days
-const monthlyMarketplaceEarnings = await sql`
-  SELECT COALESCE(SUM(amount), 0) AS "monthlyMarketplace"
-  FROM course_transactions2
-  WHERE ownerid = ${userid}
-  AND transaction_date >= NOW() - INTERVAL '30 days'
-`;
+    const totalMarketplaceEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "totalMarketplace"
+      FROM course_transactions2
+      WHERE ownerid = ${userid}
+    `;
 
-// Lifetime earnings from Doubts
-const totalDoubtEarnings = await sql`
-  SELECT COALESCE(SUM(amount), 0) AS "totalDoubt"
-  FROM doubt_transactions2
-  WHERE ownerid = ${userid}
-`;
+    const monthlyMarketplaceEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "monthlyMarketplace"
+      FROM course_transactions2
+      WHERE ownerid = ${userid}
+      AND transaction_date >= NOW() - INTERVAL '30 days'
+    `;
 
-// Earnings from Doubts in the last 30 days
-const monthlyDoubtEarnings = await sql`
-  SELECT COALESCE(SUM(amount), 0) AS "monthlyDoubt"
-  FROM doubt_transactions2
-  WHERE ownerid = ${userid}
-  AND transaction_date >= NOW() - INTERVAL '30 days'
-`;
+    const totalDoubtRatingEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "totalDoubt"
+      FROM doubt_transactions2
+      WHERE ownerid = ${userid}
+    `;
 
-res.json({
-  totalCourses: Number(totalCoursesResult[0].totalCourses) || 0,
-  monthlyCourses: Number(monthlyCoursesResult[0].monthlyCourses) || 0,
-  avgCourseRating: parseFloat(avgCourseRatingResult[0].avgCourseRating || 0).toFixed(1),
+    const monthlyDoubtRatingEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "monthlyDoubt"
+      FROM doubt_transactions2
+      WHERE ownerid = ${userid}
+      AND transaction_date >= NOW() - INTERVAL '30 days'
+    `;
 
-  totalDoubts: Number(totalDoubtsResult[0].totalDoubts) || 0,
-  monthlyDoubts: Number(monthlyDoubtsResult[0].monthlyDoubts) || 0,
-  avgDoubtRating: parseFloat(avgDoubtRatingResult[0].avgDoubtRating || 0).toFixed(1),
+    const totalDoubtReplyEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "totalDoubtReply"
+      FROM doubt_reply_transactions2
+      WHERE userid = ${userid}
+    `;
 
-  lifetimeEarningsMarketplace: parseFloat(totalMarketplaceEarnings[0].totalMarketplace).toFixed(2),
-  monthlyEarningsMarketplace: parseFloat(monthlyMarketplaceEarnings[0].monthlyMarketplace).toFixed(2),
-  lifetimeEarningsDoubt: parseFloat(totalDoubtEarnings[0].totalDoubt).toFixed(2),
-  monthlyEarningsDoubt: parseFloat(monthlyDoubtEarnings[0].monthlyDoubt).toFixed(2),
-});
+    const monthlyDoubtReplyEarnings = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS "monthlyDoubtReply"
+      FROM doubt_reply_transactions2
+      WHERE userid = ${userid}
+      AND transaction_date >= NOW() - INTERVAL '30 days'
+    `;
+
+    // Final Doubt Earnings (sum of both)
+    const lifetimeDoubtEarnings = (
+      parseFloat(totalDoubtRatingEarnings[0].totalDoubt) +
+      parseFloat(totalDoubtReplyEarnings[0].totalDoubtReply)
+    ).toFixed(2);
+
+    const monthlyDoubtEarnings = (
+      parseFloat(monthlyDoubtRatingEarnings[0].monthlyDoubt) +
+      parseFloat(monthlyDoubtReplyEarnings[0].monthlyDoubtReply)
+    ).toFixed(2);
+
+    res.json({
+      totalCourses: Number(totalCoursesResult[0].totalCourses) || 0,
+      monthlyCourses: Number(monthlyCoursesResult[0].monthlyCourses) || 0,
+      avgCourseRating: parseFloat(avgCourseRatingResult[0].avgCourseRating || 0).toFixed(1),
+
+      totalDoubts: Number(totalDoubtsResult[0].totalDoubts) || 0,
+      monthlyDoubts: Number(monthlyDoubtsResult[0].monthlyDoubts) || 0,
+      avgDoubtRating: parseFloat(avgDoubtRatingResult[0].avgDoubtRating || 0).toFixed(1),
+
+      lifetimeEarningsMarketplace: parseFloat(totalMarketplaceEarnings[0].totalMarketplace).toFixed(2),
+      monthlyEarningsMarketplace: parseFloat(monthlyMarketplaceEarnings[0].monthlyMarketplace).toFixed(2),
+
+      lifetimeEarningsDoubt: lifetimeDoubtEarnings,
+      monthlyEarningsDoubt: monthlyDoubtEarnings,
+
+      userid: Number(userid)
+    });
 
   } catch (error) {
     console.error("Error in getStats:", error);
